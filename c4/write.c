@@ -6,13 +6,12 @@
 #include<unistd.h>
 int main()
 {
-    int fd = open("/home/user/CODE/TLPI/TF/1.txt",O_RDWR);
+    int fd = open("/home/user/CODE/TLPI/TF/hellowrite.txt",O_RDWR|O_CREAT);
     if(fd == -1)printf("Open Error!\n");
-    char * str = (char *)malloc(1280);
-    read(fd,str,20);
-    printf("%s",str);
+    char str[] = "hello write!";
+    write(fd,str,5);
 
-    close(fd);
-    free(str);
+    
+
     return 0;
 }
