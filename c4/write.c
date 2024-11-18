@@ -11,7 +11,5 @@ int main()
     char str[] = "hello write!";
     write(fd,str,5);
 
-    
-
     return 0;
 }
