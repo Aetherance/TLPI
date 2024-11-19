@@ -4,6 +4,10 @@
 #include<fcntl.h>
 #include<stdlib.h>
 #include<unistd.h>
+void test(int a,...)
+{
+    
+}
 int main()
 {
     int fd = open("/home/user/CODE/TLPI/TF/num.txt",O_RDWR);
