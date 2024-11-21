@@ -21,7 +21,7 @@ int main(int argc,char ** argv)
         stat(temp_name,temp_stat);
         if(S_ISREG(temp_stat->st_mode)&&!(temp_stat->st_mode & S_IXUSR))printf("%s  ",temp->d_name);
         if(S_ISREG(temp_stat->st_mode)&& (temp_stat->st_mode & S_IXUSR))printf("\033[;1;32m%s  \033[0m",temp->d_name);
-        if(S_ISDIR(temp_stat->st_mode))printf("\033[;1;34m%s \033[0m",temp->d_name);
+        if(S_ISDIR(temp_stat->st_mode))printf("\033[;1;34m%s  \033[0m",temp->d_name);
     }
 
 
