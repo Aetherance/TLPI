@@ -6,7 +6,7 @@
 #include<unistd.h>
 int main()
 {
-    int fd = open("/home/user/CODE/TLPI/TF/hellowrite.txt",O_RDWR|O_CREAT);
+    int fd = open("/home/user/CODE/TLPI/c4/1",O_RDWR|O_CREAT);
     if(fd == -1)printf("Open Error!\n");
     char str[] = "hello write!";
     write(fd,str,5);
