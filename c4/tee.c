@@ -7,8 +7,6 @@
 #include<unistd.h>
 int main(int argc,char**argv)
 {
-    argc = 2;
-    argv[1] = "/home/user/CODE/TLPI/c4/1";
 
     char buf[1000000];
     if(argc==1)
@@ -19,13 +17,13 @@ int main(int argc,char**argv)
     }               
     else if(argc == 2)
     {
-        int fd = open(argv[1],O_RDWR|O_TRUNC|O_CREAT,S_IRUSR|S_IWUSR);
+        int fd = open("./1",O_RDWR|O_TRUNC|O_CREAT,S_IRUSR|S_IWUSR);
         char c;
         int count = 0;
         while ((c = getchar())!=EOF)
         {
             
-            read(,stdin,);
+            
             
         }
         
