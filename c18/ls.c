@@ -49,16 +49,23 @@ int main(int argc,char **argv)
     free(end->next);
     end->next = NULL;
 
+    // sort
+
+    
+
     struct ifm * readifm = ifmlist;
     while(readifm->next!=NULL)
     {
-        if(!strcmp(rdirent->d_name,".")||!strcmp(rdirent->d_name,"..")||*rdirent->d_name=='.')
+        if(!strcmp(readifm->rdirent->d_name,".")||!strcmp(readifm->rdirent->d_name,"..")||*readifm->rdirent->d_name=='.')
+        {
+            readifm = readifm->next;
             continue;
-        
+        }
+
     // print
         
         if(S_ISREG(readifm->buf__stat.st_mode)&&!(readifm->buf__stat.st_mode & S_IXUSR))printf("%s  ",readifm->rdirent->d_name);
-        if(S_ISREG(readifm->buf__stat.st_mode)&& (readifm->buf__stat.st_mode & S_IXUSR))printf("\033[;1;32m%s  \033[0m",readifm->rdirent->d_name);
+        if(S_ISREG(readifm->buf__stat.st_mode)&&(readifm->buf__stat.st_mode & S_IXUSR))printf("\033[;1;32m%s  \033[0m",readifm->rdirent->d_name);
         if(S_ISDIR(readifm->buf__stat.st_mode))printf("\033[;1;34m%s  \033[0m",readifm->rdirent->d_name);
         readifm = readifm->next;
     }
