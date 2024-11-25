@@ -9,8 +9,10 @@ int main(int argc,char **argv)
         argv[1] = ".";
     
     DIR * dir = opendir(argv[1]);
-    struct dirent * rdirent;
-    struct stat * statbuf;
+    struct dirent sdirent;
+    struct dirent * rdirent = &sdirent;
+    struct stat buf__stat;    // 开辟空间
+    struct stat * statbuf = &buf__stat;
 
     if(dir == NULL)
     {
@@ -21,13 +23,14 @@ int main(int argc,char **argv)
 
     while((rdirent = readdir(dir))!=NULL)
     {
-
         char path_[1000],path[1000];
+
         sprintf(path_,"%s/%s",argv[1],rdirent->d_name);
         realpath(path_,path);
         stat(path,statbuf);
 
         // print
+        
         if(S_ISREG(statbuf->st_mode)&&!(statbuf->st_mode & S_IXUSR))printf("%s  ",rdirent->d_name);
         if(S_ISREG(statbuf->st_mode)&& (statbuf->st_mode & S_IXUSR))printf("\033[;1;32m%s  \033[0m",rdirent->d_name);
         if(S_ISDIR(statbuf->st_mode))printf("\033[;1;34m%s  \033[0m",rdirent->d_name);
