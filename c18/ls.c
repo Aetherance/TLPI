@@ -3,7 +3,9 @@
 #include<string.h>
 #include<dirent.h>
 #include<stdlib.h>
+#include<getopt.h>
 
+// ifm
 struct ifm
 {
     struct dirent *rdirent;
@@ -12,10 +14,21 @@ struct ifm
     struct ifm * next;
 };
 
+int opt_count_sum = 0;
+int opt;    // temp
+char optable[256] = {};  // 01 table
 
 int main(int argc,char **argv)
 {
-    if(argc==1)
+    // getopt
+    while((opt = getopt(argc,argv,"a"))!=-1)
+    {
+        optable[opt] = 1;
+        opt_count_sum += optable[opt];
+    }
+
+    //
+    if(argc==1+opt_count_sum)
         argv[1] = ".";
     
     DIR * dir = opendir(argv[1]);
@@ -53,14 +66,16 @@ int main(int argc,char **argv)
 
     
 
+    // read from ifm
     struct ifm * readifm = ifmlist;
     while(readifm->next!=NULL)
     {
-        if(!strcmp(readifm->rdirent->d_name,".")||!strcmp(readifm->rdirent->d_name,"..")||*readifm->rdirent->d_name=='.')
-        {
-            readifm = readifm->next;
-            continue;
-        }
+        if(!optable['a'])
+            if(!strcmp(readifm->rdirent->d_name,".")||!strcmp(readifm->rdirent->d_name,"..")||*readifm->rdirent->d_name=='.')
+            {
+                readifm = readifm->next;
+                continue;
+            }
 
     // print
         
@@ -70,7 +85,7 @@ int main(int argc,char **argv)
         readifm = readifm->next;
     }
     
-    //释放
+    // free
 
     struct ifm * ifm_free = ifmlist;
     while(ifm_free->next!=NULL)
@@ -84,6 +99,6 @@ int main(int argc,char **argv)
     ifmlist = NULL;
     
 
-
+    printf("\n");
     return  0;
 }
