@@ -4,6 +4,7 @@
 #include<dirent.h>
 #include<stdlib.h>
 #include<getopt.h>
+#include<ctype.h>
 
 // ifm
 struct ifm
@@ -17,6 +18,7 @@ struct ifm
 int opt_count_sum = 0;
 int opt;    // temp
 char optable[256] = {};  // 01 table
+char filepath[128] = ".";
 
 int main(int argc,char **argv)
 {
@@ -24,21 +26,32 @@ int main(int argc,char **argv)
     while((opt = getopt(argc,argv,"a"))!=-1)
     {
         optable[opt] = 1;
-        opt_count_sum += optable[opt];
+        //opt_count_sum += optable[opt];
     }
 
-    //
-    if(argc==1+opt_count_sum)
-        argv[1] = ".";
+    char ** arcu = argv+1;
+    while(*arcu!=NULL)
+    {
+        if(strcmp(*arcu,"-a"))
+        {
+            strcpy(filepath,*arcu);
+            break; 
+        }
+        arcu++;
+    }
+
     
-    DIR * dir = opendir(argv[1]);
+    //
+
+
+    DIR * dir = opendir(filepath);
     struct dirent * rdirent;
     struct stat buf__stat;    // 开辟空间
     struct stat * statbuf = &buf__stat;
 
     if(dir == NULL)
     {
-        printf("ls: 无法访问 '%s': 没有那个文件或目录\n",argv[1]);
+        printf("ls: 无法访问 '%s': 没有那个文件或目录\n",filepath);
         return 1;
     }
     
@@ -50,7 +63,7 @@ int main(int argc,char **argv)
     while((cur->rdirent = readdir(dir))!=NULL)
     {
         char path[1000];
-        sprintf(path,"%s/%s",argv[1],cur->rdirent->d_name);
+        sprintf(path,"%s/%s",filepath,cur->rdirent->d_name);
         stat(path,&cur->buf__stat);
 
 
