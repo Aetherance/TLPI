@@ -81,7 +81,7 @@ int main(int argc,char **argv)
 
     // read from ifm
     struct ifm * readifm = ifmlist;
-    while(readifm->next!=NULL)
+    while(readifm!=NULL)
     {
         if(!optable['a'])
             if(!strcmp(readifm->rdirent->d_name,".")||!strcmp(readifm->rdirent->d_name,"..")||*readifm->rdirent->d_name=='.')
