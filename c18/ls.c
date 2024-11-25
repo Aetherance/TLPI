@@ -41,8 +41,8 @@ int main(int argc,char **argv)
     }
 
     
-    //
 
+    // open
 
     DIR * dir = opendir(filepath);
     struct dirent * rdirent;
