@@ -2,9 +2,9 @@
 #include<sys/stat.h>
 #include<string.h>
 #include<dirent.h>
-#include<stdlib.h>
 #include<getopt.h>
 #include<ctype.h>
+#include<stdlib.h>
 typedef int(*FP)(const void *, const void *);
 
 // ifm
@@ -53,7 +53,7 @@ int main(int argc,char **argv)
         return 1;
     }
     
-    struct ifm ifmlist[25565];// list
+    static struct ifm ifmlist[2097152];// list
     struct ifm * cur = ifmlist,*end;
 
     // name 和 statbuf存放
@@ -109,20 +109,25 @@ int main(int argc,char **argv)
                 continue;
             }
 
+    // get_print_format
+
+
+
+
     // print
         
         if(S_ISREG(readifm->buf__stat.st_mode)
         &&!(readifm->buf__stat.st_mode & S_IXUSR))
-            printf("%-*s",maxlen,readifm->rdirent->d_name);
+            printf("%s",readifm->rdirent->d_name);
         
         if(S_ISREG(readifm->buf__stat.st_mode)
         &&(readifm->buf__stat.st_mode & S_IXUSR))
-            printf("\033[1;32m%-*s\033[0m",maxlen,readifm->rdirent->d_name);
+            printf("\033[1;32m%s\033[0m",readifm->rdirent->d_name);
         
         if(S_ISDIR(readifm->buf__stat.st_mode))
-            printf("\033[1;34m%-*s\033[0m",maxlen,readifm->rdirent->d_name);
+            printf("\033[1;34m%s\033[0m",readifm->rdirent->d_name);
         
-        printf(" ");
+        printf("  ");
         
         
         readifm ++;
