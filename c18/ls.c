@@ -5,6 +5,7 @@
 #include<stdlib.h>
 #include<getopt.h>
 #include<ctype.h>
+typedef int(*FP)(const void *, const void *);
 
 // ifm
 struct ifm
@@ -57,6 +58,7 @@ int main(int argc,char **argv)
 
     // name 和 statbuf存放
 
+    int count = 0;
     int maxlen = 0;     //最长文件名
     while((cur->rdirent = readdir(dir))!=NULL)
     {
@@ -71,14 +73,29 @@ int main(int argc,char **argv)
         sprintf(path,"%s/%s",filepath,cur->rdirent->d_name);
         stat(path,&cur->buf__stat);
 
-
+        count++;
         cur++;
     }
     
 
     // sort
 
-    
+    int sort_init(const void * ptr1, const void * ptr2)
+    {
+        struct ifm * pos  = (struct ifm*)ptr1, * aftpos = (struct ifm*)ptr2;
+        if(strcmp(pos->rdirent->d_name,aftpos->rdirent->d_name)>0)
+            return 1;
+        if(strcmp(pos->rdirent->d_name,aftpos->rdirent->d_name)<0)
+            return -1;
+        return 0;
+    }
+
+    FP sort_mode = sort_init;
+    qsort(ifmlist,count,sizeof(struct ifm),sort_mode);
+
+
+
+
 
 
     // read from ifm
