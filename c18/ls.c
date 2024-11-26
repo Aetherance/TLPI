@@ -40,7 +40,6 @@ int main(int argc,char **argv)
         arcu++;
     }
 
-    
 
     // open
 
@@ -101,9 +100,20 @@ int main(int argc,char **argv)
 
     // print
         
-        if(S_ISREG(readifm->buf__stat.st_mode)&&!(readifm->buf__stat.st_mode & S_IXUSR))printf("%-*s",maxlen,readifm->rdirent->d_name);
-        if(S_ISREG(readifm->buf__stat.st_mode)&&(readifm->buf__stat.st_mode & S_IXUSR))printf("\033[1;32m%-*s\033[0m",maxlen,readifm->rdirent->d_name);
-        if(S_ISDIR(readifm->buf__stat.st_mode))printf("\033[1;34m%-*s\033[0m",maxlen,readifm->rdirent->d_name);
+        if(S_ISREG(readifm->buf__stat.st_mode)
+        &&!(readifm->buf__stat.st_mode & S_IXUSR))
+            printf("%-*s",maxlen,readifm->rdirent->d_name);
+        
+        if(S_ISREG(readifm->buf__stat.st_mode)
+        &&(readifm->buf__stat.st_mode & S_IXUSR))
+            printf("\033[1;32m%-*s\033[0m",maxlen,readifm->rdirent->d_name);
+        
+        if(S_ISDIR(readifm->buf__stat.st_mode))
+            printf("\033[1;34m%-*s\033[0m",maxlen,readifm->rdirent->d_name);
+        
+        printf(" ");
+        
+        
         readifm = readifm->next;
     }
     
