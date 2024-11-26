@@ -11,8 +11,6 @@ struct ifm
 {
     struct dirent *rdirent;
     struct stat buf__stat;
-
-    struct ifm * next;
 };
 
 int opt_count_sum = 0;
@@ -54,7 +52,7 @@ int main(int argc,char **argv)
         return 1;
     }
     
-    struct ifm * ifmlist =  malloc(sizeof(struct ifm)); // head
+    struct ifm ifmlist[25565];// list
     struct ifm * cur = ifmlist,*end;
 
     // name 和 statbuf存放
@@ -74,13 +72,9 @@ int main(int argc,char **argv)
         stat(path,&cur->buf__stat);
 
 
-        cur->next = (struct ifm*)malloc(sizeof(struct ifm));
-        end = cur;
-        cur = cur->next;
+        cur++;
     }
     
-    free(end->next);
-    end->next = NULL;
 
     // sort
 
@@ -89,12 +83,12 @@ int main(int argc,char **argv)
 
     // read from ifm
     struct ifm * readifm = ifmlist;
-    while(readifm!=NULL)
+    while(readifm!=cur)
     {
         if(!optable['a'])
             if(!strcmp(readifm->rdirent->d_name,".")||!strcmp(readifm->rdirent->d_name,"..")||*readifm->rdirent->d_name=='.')
             {
-                readifm = readifm->next;
+                readifm++;
                 continue;
             }
 
@@ -114,21 +108,8 @@ int main(int argc,char **argv)
         printf(" ");
         
         
-        readifm = readifm->next;
+        readifm ++;
     }
-    
-    // free
-
-    struct ifm * ifm_free = ifmlist;
-    while(ifm_free->next!=NULL)
-    {
-        struct ifm * temp = ifm_free;
-        free(ifm_free->next);
-        ifm_free = ifm_free->next;
-        temp->next = NULL;
-    }
-    free(ifmlist);
-    ifmlist = NULL;
     
 
     printf("\n");
