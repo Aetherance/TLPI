@@ -60,8 +60,16 @@ int main(int argc,char **argv)
 
     // name 和 statbuf存放
 
+    int maxlen = 0;     //最长文件名
     while((cur->rdirent = readdir(dir))!=NULL)
     {
+        // get_max_len
+        if(strlen(cur->rdirent->d_name)>maxlen)
+            maxlen = strlen(cur->rdirent->d_name)+1;
+
+        maxlen = maxlen>7?7:maxlen;
+
+
         char path[1000];
         sprintf(path,"%s/%s",filepath,cur->rdirent->d_name);
         stat(path,&cur->buf__stat);
@@ -79,6 +87,7 @@ int main(int argc,char **argv)
 
     
 
+
     // read from ifm
     struct ifm * readifm = ifmlist;
     while(readifm!=NULL)
@@ -92,9 +101,9 @@ int main(int argc,char **argv)
 
     // print
         
-        if(S_ISREG(readifm->buf__stat.st_mode)&&!(readifm->buf__stat.st_mode & S_IXUSR))printf("%s  ",readifm->rdirent->d_name);
-        if(S_ISREG(readifm->buf__stat.st_mode)&&(readifm->buf__stat.st_mode & S_IXUSR))printf("\033[;1;32m%s  \033[0m",readifm->rdirent->d_name);
-        if(S_ISDIR(readifm->buf__stat.st_mode))printf("\033[;1;34m%s  \033[0m",readifm->rdirent->d_name);
+        if(S_ISREG(readifm->buf__stat.st_mode)&&!(readifm->buf__stat.st_mode & S_IXUSR))printf("%-*s",maxlen,readifm->rdirent->d_name);
+        if(S_ISREG(readifm->buf__stat.st_mode)&&(readifm->buf__stat.st_mode & S_IXUSR))printf("\033[1;32m%-*s\033[0m",maxlen,readifm->rdirent->d_name);
+        if(S_ISDIR(readifm->buf__stat.st_mode))printf("\033[1;34m%-*s\033[0m",maxlen,readifm->rdirent->d_name);
         readifm = readifm->next;
     }
     
