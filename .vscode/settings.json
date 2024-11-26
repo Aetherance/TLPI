@@ -3,7 +3,8 @@
         "*.c": "c",
         "unistd.h": "c",
         "algorithm": "c",
-        "stdio.h": "c"
+        "stdio.h": "c",
+        "termios.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }
