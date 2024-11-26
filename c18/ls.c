@@ -99,13 +99,32 @@ int main(int argc,char **argv)
     int sort_init(const void * ptr1, const void * ptr2)
     {
         struct ifm * pos  = (struct ifm*)ptr1, * aftpos = (struct ifm*)ptr2;
+        
+        if(*(pos->rdirent->d_name)=='.'&&(*(pos->rdirent->d_name+1)!='.'&&*(pos->rdirent->d_name+1)!='\0'))
+        {
+            if(strcmp(pos->rdirent->d_name+1,aftpos->rdirent->d_name)>0)
+                return 1;
+            if(strcmp(pos->rdirent->d_name+1,aftpos->rdirent->d_name)<0)
+                return -1;
+            return 0;
+        }
+        if(*(aftpos->rdirent->d_name)=='.'&&(*(aftpos->rdirent->d_name+1)!='.'&&*(aftpos->rdirent->d_name+1)!='\0'))
+        {
+            if(strcmp(pos->rdirent->d_name,aftpos->rdirent->d_name)>0)
+                return 1;
+            if(strcmp(pos->rdirent->d_name,aftpos->rdirent->d_name)<0)
+                return -1;
+            return 0;
+        } 
+        
+        
         if(strcmp(pos->rdirent->d_name,aftpos->rdirent->d_name)>0)
             return 1;
         if(strcmp(pos->rdirent->d_name,aftpos->rdirent->d_name)<0)
             return -1;
         return 0;
     }
-
+    
     FP sort_mode = sort_init;
     qsort(ifmlist,all_name_count,sizeof(struct ifm),sort_mode);
 
@@ -127,7 +146,6 @@ int main(int argc,char **argv)
                     readifm++;
                     continue;
                 }
-
 
     
     // print
