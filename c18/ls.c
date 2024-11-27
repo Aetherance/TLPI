@@ -12,6 +12,15 @@
 #define LIST_SIZE 2097152
 #define PATH_SIZE 1000
 #define FILE_PATH_SIZE 128
+
+#define OPT__a_ 'a'
+#define OPT__l_ 'l'
+#define OPT__t_ 't'
+#define OPT__r_ 'r'
+#define OPT__R_ 'R'
+#define OPT__i_ 'i'
+#define OPT__s_ 's'
+
 typedef int(*FP)(const void *, const void *);
 
 // ifm
@@ -49,7 +58,7 @@ int main(int argc,char **argv)
     // open
     DIR * dir = opendir(filepath);
     struct dirent * rdirent;
-    struct stat buf__stat;    // 开辟空间
+    struct stat buf__stat;    // 静态开辟空间
     struct stat * statbuf = &buf__stat;
 
     if(dir == NULL)
@@ -92,7 +101,7 @@ int main(int argc,char **argv)
 
     // -r
     
-    int isr = optable['r'] ? -1 : 1 ;
+    int order = optable[OPT__r_] ? -1 : 1 ;
 
     // sort
 
@@ -103,25 +112,25 @@ int main(int argc,char **argv)
         if(*(pos->rdirent->d_name)=='.'&&(*(pos->rdirent->d_name+1)!='.'&&*(pos->rdirent->d_name+1)!='\0'))
         {
             if(strcmp(pos->rdirent->d_name+1,aftpos->rdirent->d_name)>0)
-                return 1 * isr;
+                return 1 * order;
             if(strcmp(pos->rdirent->d_name+1,aftpos->rdirent->d_name)<0)
-                return -1 * isr;
+                return -1 * order;
             return 0;
         }
         if(*(aftpos->rdirent->d_name)=='.'&&(*(aftpos->rdirent->d_name+1)!='.'&&*(aftpos->rdirent->d_name+1)!='\0'))
         {
             if(strcmp(pos->rdirent->d_name,aftpos->rdirent->d_name)>0)
-                return 1 * isr;
+                return 1 * order;
             if(strcmp(pos->rdirent->d_name,aftpos->rdirent->d_name)<0)
-                return -1 * isr;
+                return -1 * order;
             return 0;
         } 
         
         
         if(strcmp(pos->rdirent->d_name,aftpos->rdirent->d_name)>0)
-            return 1 * isr;
+            return 1 * order;
         if(strcmp(pos->rdirent->d_name,aftpos->rdirent->d_name)<0)
-            return -1 * isr;
+            return -1 * order;
         return 0;
     }
     
@@ -129,9 +138,9 @@ int main(int argc,char **argv)
     {
         struct ifm * pos  = (struct ifm*)ptr1, * aftpos = (struct ifm*)ptr2;
         if(pos->buf__stat.st_ctime<aftpos->buf__stat.st_ctime)
-            return 1 * isr;
+            return 1 * order;
         if(pos->buf__stat.st_ctime>aftpos->buf__stat.st_ctime)
-            return -1 * isr;
+            return -1 * order;
         return 0;
 
     }
@@ -139,7 +148,7 @@ int main(int argc,char **argv)
     // get_sort_mode
 
     FP sort_mode = sort_init;
-    if(optable['t'])sort_mode = sort_by_change_time;
+    if(optable[OPT__t_])sort_mode = sort_by_change_time;
     qsort(ifmlist,all_name_count,sizeof(struct ifm),sort_mode);
 
 
@@ -155,7 +164,7 @@ int main(int argc,char **argv)
     struct ifm * readifm = ifmlist;
     while(readifm!=cur)
     {
-        if(!optable['a'])
+        if(!optable[OPT__a_])
             if(    !strcmp(readifm->rdirent->d_name,".")||!strcmp(readifm->rdirent->d_name,"..")
             ||*readifm->rdirent->d_name=='.')
                 {
@@ -166,6 +175,12 @@ int main(int argc,char **argv)
     // print
         if(total_name_len<=win.ws_col)
         {
+            if(optable[OPT__s_])
+            {
+                printf(" %lu ",readifm->buf__stat.st_blocks);
+
+            }
+
             if(S_ISREG(readifm->buf__stat.st_mode)
             &&!(readifm->buf__stat.st_mode & S_IXUSR))
                 printf("%s",readifm->rdirent->d_name);
