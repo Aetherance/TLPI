@@ -29,7 +29,7 @@ char filepath[FILE_PATH_SIZE] = ".";
 int main(int argc,char **argv)
 {
     // getopt
-    while((opt = getopt(argc,argv,"a"))!=-1)
+    while((opt = getopt(argc,argv,"alRtris"))!=-1)
     {
         optable[opt] = 1;
         //opt_count_sum += optable[opt];
@@ -38,7 +38,7 @@ int main(int argc,char **argv)
     char ** arcu = argv+1;
     while(*arcu!=NULL)
     {
-        if(strcmp(*arcu,"-a"))
+        if(**arcu != '-')
         {
             strcpy(filepath,*arcu);
             break; 
@@ -46,9 +46,7 @@ int main(int argc,char **argv)
         arcu++;
     }
 
-
     // open
-
     DIR * dir = opendir(filepath);
     struct dirent * rdirent;
     struct stat buf__stat;    // 开辟空间
@@ -125,8 +123,24 @@ int main(int argc,char **argv)
         return 0;
     }
     
+    int sort_by_change_time(const void * ptr1, const void * ptr2)
+    {
+        struct ifm * pos  = (struct ifm*)ptr1, * aftpos = (struct ifm*)ptr2;
+        if(pos->buf__stat.st_ctime<aftpos->buf__stat.st_ctime)
+            return 1;
+        if(pos->buf__stat.st_ctime>aftpos->buf__stat.st_ctime)
+            return -1;
+        return 0;
+
+    }
+
+    // get_sort_mode
+
     FP sort_mode = sort_init;
+    if(optable['t'])sort_mode = sort_by_change_time;
     qsort(ifmlist,all_name_count,sizeof(struct ifm),sort_mode);
+
+
 
     // get_print_format
 
@@ -147,7 +161,6 @@ int main(int argc,char **argv)
                     continue;
                 }
 
-    
     // print
         if(total_name_len<=win.ws_col)
         {
