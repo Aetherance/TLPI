@@ -78,6 +78,7 @@ int main(int argc,char **argv)
     static int max_len = 0;     //最长文件名
     static int line_print_now = 0;
     static int divide_count = 0;
+    static size_t blockSum = 0;
 
     while((cur->rdirent = readdir(dir))!=NULL)
     {
@@ -92,9 +93,12 @@ int main(int argc,char **argv)
         sprintf(path,"%s/%s",filepath,cur->rdirent->d_name);
         stat(path,&cur->buf__stat);
 
-        total_name_len += strlen(cur->rdirent->d_name) + 2;     // 确定总长度 判断是否需要切换输出模式
+        total_name_len += strlen(cur->rdirent->d_name) + 2; // 确定总长度 判断是否需要切换输出模式
         //total_name_len-=2;  // 减去最后的两个空格
         if(optable[OPT__s_]) total_name_len += 3;
+
+        if(optable[OPT__a_])blockSum += cur->buf__stat.st_blocks/2; // why
+        else if(cur->rdirent->d_name[0]!='.')blockSum += cur->buf__stat.st_blocks/2;
 
         all_name_count++;
         cur++;
@@ -149,10 +153,14 @@ int main(int argc,char **argv)
 
     // get_print_format
 
-        static struct winsize win;
-        ioctl(STDIN_FILENO,TIOCGWINSZ,&win);
-        divide_count = total_name_len / win.ws_col + 1;
+    static struct winsize win;
+    ioctl(STDIN_FILENO,TIOCGWINSZ,&win);
+    divide_count = total_name_len / win.ws_col + 1;
         
+
+    // opt_s using
+
+    if(optable[OPT__s_])printf("总计 %zu\n",blockSum);
 
     // read from ifm
     struct ifm * readifm = ifmlist;
