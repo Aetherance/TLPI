@@ -109,9 +109,21 @@ int main(int argc,char **argv)
     {
         struct ifm * pos  = (struct ifm*)ptr1, * aftpos = (struct ifm*)ptr2;
         
+        // 如果前面的部分一样，把长的排在后面
+        if(strstr(pos->rdirent->d_name,aftpos->rdirent->d_name)!=NULL)
+            return 1;
+        if(strstr(aftpos->rdirent->d_name,pos->rdirent->d_name)!=NULL)
+            return -1;
+
         if(*(pos->rdirent->d_name)=='.'&&(*(pos->rdirent->d_name+1)!='.'&&*(pos->rdirent->d_name+1)!='\0'))
-            return strcmp(pos->rdirent->d_name+1,aftpos->rdirent->d_name) * order; 
-        
+        {
+            if(strstr(pos->rdirent->d_name,aftpos->rdirent->d_name)!=NULL)
+                return 1;
+            if(strstr(aftpos->rdirent->d_name,pos->rdirent->d_name)!=NULL)
+                return -1;
+            
+            return strcmp(pos->rdirent->d_name+1,aftpos->rdirent->d_name+1) * order; 
+        }
         return strcmp(pos->rdirent->d_name,aftpos->rdirent->d_name) * order;
     }
     
