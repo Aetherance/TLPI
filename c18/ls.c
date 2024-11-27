@@ -182,7 +182,7 @@ int main(int argc,char **argv)
     // print
 
         // 输出格式
-        if(line_print_now == all_name_count/divide_count-1)
+        if(!optable[OPT__l_]&&line_print_now == all_name_count/divide_count-1)
         {
             printf("\b\b");
             printf("\n");
@@ -199,7 +199,38 @@ int main(int argc,char **argv)
         {
             printf("%2lu ",readifm->buf__stat.st_blocks/2);     // why
         }
-        if(total_name_len<=win.ws_col)
+
+        if(optable[OPT__l_])    // -l
+        {
+            // 第一列
+            if(S_ISDIR(readifm->buf__stat.st_mode))printf("d");
+            else if(S_ISLNK(readifm->buf__stat.st_mode))printf("l");
+            else if(S_ISBLK(readifm->buf__stat.st_mode))printf("d");
+            else if(S_ISCHR(readifm->buf__stat.st_mode))printf("c");
+            else if(S_ISCHR(readifm->buf__stat.st_mode))printf("c");
+            else printf("-");
+
+            // 所有者权限
+
+            
+
+
+
+            //所属组权限
+
+
+
+
+
+            //其他用户权限
+
+
+
+
+
+            printf("\n");
+        }
+        else if(total_name_len<=win.ws_col)
         {
 
             if(S_ISREG(readifm->buf__stat.st_mode)
@@ -240,6 +271,6 @@ int main(int argc,char **argv)
     }
     
 
-    printf("\n");
+    if(!optable[OPT__l_])printf("\n");
     return  0;
 }
