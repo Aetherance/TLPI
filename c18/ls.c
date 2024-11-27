@@ -110,28 +110,9 @@ int main(int argc,char **argv)
         struct ifm * pos  = (struct ifm*)ptr1, * aftpos = (struct ifm*)ptr2;
         
         if(*(pos->rdirent->d_name)=='.'&&(*(pos->rdirent->d_name+1)!='.'&&*(pos->rdirent->d_name+1)!='\0'))
-        {
-            if(strcmp(pos->rdirent->d_name+1,aftpos->rdirent->d_name)>0)
-                return 1 * order;
-            if(strcmp(pos->rdirent->d_name+1,aftpos->rdirent->d_name)<0)
-                return -1 * order;
-            return 0;
-        }
-        if(*(aftpos->rdirent->d_name)=='.'&&(*(aftpos->rdirent->d_name+1)!='.'&&*(aftpos->rdirent->d_name+1)!='\0'))
-        {
-            if(strcmp(pos->rdirent->d_name,aftpos->rdirent->d_name)>0)
-                return 1 * order;
-            if(strcmp(pos->rdirent->d_name,aftpos->rdirent->d_name)<0)
-                return -1 * order;
-            return 0;
-        } 
+            return strcmp(pos->rdirent->d_name+1,aftpos->rdirent->d_name) * order; 
         
-        
-        if(strcmp(pos->rdirent->d_name,aftpos->rdirent->d_name)>0)
-            return 1 * order;
-        if(strcmp(pos->rdirent->d_name,aftpos->rdirent->d_name)<0)
-            return -1 * order;
-        return 0;
+        return strcmp(pos->rdirent->d_name,aftpos->rdirent->d_name) * order;
     }
     
     int sort_by_change_time(const void * ptr1, const void * ptr2)
@@ -177,7 +158,7 @@ int main(int argc,char **argv)
         {
             if(optable[OPT__s_])
             {
-                printf(" %lu ",readifm->buf__stat.st_blocks);
+                printf("%2lu ",readifm->buf__stat.st_blocks/2);     // why
 
             }
 
