@@ -94,6 +94,7 @@ int main(int argc,char **argv)
 
         total_name_len += strlen(cur->rdirent->d_name) + 2;     // 确定总长度 判断是否需要切换输出模式
         //total_name_len-=2;  // 减去最后的两个空格
+        if(optable[OPT__s_]) total_name_len += 3;
 
         all_name_count++;
         cur++;
@@ -166,13 +167,22 @@ int main(int argc,char **argv)
                 }
 
     // print
+
+        // 输出格式
+        if(line_print_now == all_name_count/divide_count-1)
+        {
+            printf("\b\b");
+            printf("\n");
+            temp_line_len = 0;
+            line_print_now = 0;
+        }
+
+        if(optable[OPT__s_])
+        {
+            printf("%2lu ",readifm->buf__stat.st_blocks/2);     // why
+        }
         if(total_name_len<=win.ws_col)
         {
-            if(optable[OPT__s_])
-            {
-                printf("%2lu ",readifm->buf__stat.st_blocks/2);     // why
-
-            }
 
             if(S_ISREG(readifm->buf__stat.st_mode)
             &&!(readifm->buf__stat.st_mode & S_IXUSR))
@@ -191,13 +201,6 @@ int main(int argc,char **argv)
         {
             temp_line_len += strlen(readifm->rdirent->d_name)+2;
 
-            if(line_print_now == all_name_count/divide_count-1)
-            {
-                printf("\b\b");
-                printf("\n");
-                temp_line_len = 0;
-                line_print_now = 0;
-            }
 
             if(S_ISREG(readifm->buf__stat.st_mode)
             &&!(readifm->buf__stat.st_mode & S_IXUSR))
@@ -212,6 +215,7 @@ int main(int argc,char **argv)
             
             printf(" ");
         }
+        
         
         line_print_now ++;
         readifm ++;
