@@ -39,9 +39,10 @@ char optTable[256] = {};  // 01 table
 char filepath[FILE_COUNT_MAX][FILE_PATH_SIZE] = {"."};
 int FileNameCount = 1;
 int FileNameRead = 0;
-char fatherPath[100];
+char fatherPath[100] = ".";
 // sort
 int order = 1;
+int FileNameInCount = 0;
 
 int sort_init(const void * ptr1, const void * ptr2)
 {
@@ -78,7 +79,7 @@ static struct ifm ifmlist[LIST_SIZE];// list
 
 int main(int argc,char **argv)
 {
-    optTable['R'] = 1;;
+    optTable['R'] = 1;
     // getopt
     while((opt = getopt(argc,argv,"alRtris"))!=-1)
     {
@@ -160,6 +161,7 @@ int main(int argc,char **argv)
                 fileSizeLenMax = fileSizeLen;
             
             all_name_count++;
+            FileNameInCount = all_name_count;
             cur++;
         }
 
@@ -294,6 +296,7 @@ int main(int argc,char **argv)
             readifm ++;
         }
         
+        
         if(!optTable[OPT__l_])printf("\n");
         FileNameRead ++;
         if(FileNameCount>1&&FileNameCount!=FileNameRead)printf("\n");
@@ -303,20 +306,22 @@ int main(int argc,char **argv)
     {
         FileNameCount = 0;
         struct ifm *reRead = ifmlist;
-        for(int i = 0;i<FileNameRead;i++)
+        for(int i = 0;i<FileNameInCount;i++)
         {
-            if(S_ISDIR(reRead->buf__stat.st_mode))
+            if(S_ISDIR(reRead->buf__stat.st_mode)&&strcmp(reRead->rdirent->d_name,".")&&strcmp(reRead->rdirent->d_name,".."))
             {
                 char temp[1000];
+                //strcpy(fatherPath,)
                 sprintf(temp,"%s/%s",fatherPath,reRead->rdirent->d_name);
                 strcpy(filepath[FileNameCount++],temp);
             }
-
+            
+            reRead ++;
         }
             
 
         FileNameRead = 0;
-        goto FLAG;
+        if(FileNameCount)goto FLAG;
 
     }
     return  0;
