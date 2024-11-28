@@ -81,7 +81,7 @@ int main(int argc,char **argv)
     static int line_print_now = 0;
     static int divide_count = 0;
     static size_t blockSum = 0;
-
+    static int fileSizeLenMax = 0;
 
     // 读目录
 
@@ -106,6 +106,13 @@ int main(int argc,char **argv)
         if(optTable[OPT__a_])blockSum += cur->buf__stat.st_blocks/2; // why
         else if((cur->rdirent->d_name)[0]!='.')blockSum += cur->buf__stat.st_blocks/2;
 
+        int temp = cur->buf__stat.st_size;
+        int fileSizeLen = 0;
+        while(temp)
+            temp/=10,fileSizeLen ++;
+        if(fileSizeLen>fileSizeLenMax)
+            fileSizeLenMax = fileSizeLen;
+        
         all_name_count++;
         cur++;
     }
@@ -229,7 +236,7 @@ int main(int argc,char **argv)
             printf(" %lu",readifm->buf__stat.st_nlink);
             printf(" %s",getpwuid(readifm->buf__stat.st_uid)->pw_name);
             printf(" %s",getgrgid(readifm->buf__stat.st_gid)->gr_name);
-            printf(" %lu",readifm->buf__stat.st_size);
+            printf(" %*lu",fileSizeLenMax+1,readifm->buf__stat.st_size);
             
             struct tm * time = localtime(&readifm->buf__stat.st_mtime);
             char time_buf[64];
