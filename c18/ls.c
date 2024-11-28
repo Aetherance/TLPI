@@ -311,7 +311,7 @@ int main(int argc,char **argv)
             if(S_ISDIR(reRead->buf__stat.st_mode)&&strcmp(reRead->rdirent->d_name,".")&&strcmp(reRead->rdirent->d_name,".."))
             {
                 char temp[1000];
-                //strcpy(fatherPath,)
+                
                 sprintf(temp,"%s/%s",fatherPath,reRead->rdirent->d_name);
                 strcpy(filepath[FileNameCount++],temp);
             }
