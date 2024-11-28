@@ -93,7 +93,6 @@ int main(int argc,char **argv)
 
         //max_len = max_len>7?7:max_len;
 
-
         char path[PATH_SIZE];
         sprintf(path,"%s/%s",filepath,cur->rdirent->d_name);
         stat(path,&cur->buf__stat);
@@ -190,6 +189,22 @@ int main(int argc,char **argv)
 
     // print
 
+    void PrintList()
+    {
+        if(S_ISREG(readifm->buf__stat.st_mode)
+        &&!(readifm->buf__stat.st_mode & S_IXUSR))
+            printf("%s",readifm->rdirent->d_name);
+            
+        if(S_ISREG(readifm->buf__stat.st_mode)
+        &&(readifm->buf__stat.st_mode & S_IXUSR))
+            printf("\033[1;32m%s\033[0m",readifm->rdirent->d_name);
+            
+        if(S_ISDIR(readifm->buf__stat.st_mode))
+            printf("\033[1;34m%s\033[0m",readifm->rdirent->d_name);
+            
+            printf("  ");
+    }
+
         // 输出格式
         if(!optTable[OPT__l_]&&line_print_now == all_name_count/divide_count-1)
         {
@@ -236,56 +251,31 @@ int main(int argc,char **argv)
             printf(" %lu",readifm->buf__stat.st_nlink);
             printf(" %s",getpwuid(readifm->buf__stat.st_uid)->pw_name);
             printf(" %s",getgrgid(readifm->buf__stat.st_gid)->gr_name);
-            printf(" %*lu",fileSizeLenMax+1,readifm->buf__stat.st_size);
+            printf("%*lu ",fileSizeLenMax+1,readifm->buf__stat.st_size);
             
             struct tm * time = localtime(&readifm->buf__stat.st_mtime);
             char time_buf[64];
             strftime(time_buf, 64, "%m月 %d %H:%M",time);
-            printf("%s",time_buf);
+            printf("%s ",time_buf);
+
+            PrintList();
 
             printf("\n");
         }
         else if(total_name_len<=win.ws_col)
         {
-
-            if(S_ISREG(readifm->buf__stat.st_mode)
-            &&!(readifm->buf__stat.st_mode & S_IXUSR))
-                printf("%s",readifm->rdirent->d_name);
-            
-            if(S_ISREG(readifm->buf__stat.st_mode)
-            &&(readifm->buf__stat.st_mode & S_IXUSR))
-                printf("\033[1;32m%s\033[0m",readifm->rdirent->d_name);
-            
-            if(S_ISDIR(readifm->buf__stat.st_mode))
-                printf("\033[1;34m%s\033[0m",readifm->rdirent->d_name);
-            
-            printf("  ");
+            PrintList();
         }
         else
         {
             temp_line_len += strlen(readifm->rdirent->d_name)+2;
-
-
-            if(S_ISREG(readifm->buf__stat.st_mode)
-            &&!(readifm->buf__stat.st_mode & S_IXUSR))
-                printf("%-*s",max_len,readifm->rdirent->d_name);
-            
-            if(S_ISREG(readifm->buf__stat.st_mode)
-            &&(readifm->buf__stat.st_mode & S_IXUSR))
-                printf("\033[1;32m%-*s\033[0m",max_len,readifm->rdirent->d_name);
-            
-            if(S_ISDIR(readifm->buf__stat.st_mode))
-                printf("\033[1;34m%-*s\033[0m",max_len,readifm->rdirent->d_name);
-            
-            printf(" ");
+            PrintList();
         }
-        
         
         line_print_now ++;
         readifm ++;
     }
     
-
     if(!optTable[OPT__l_])printf("\n");
     return  0;
 }
