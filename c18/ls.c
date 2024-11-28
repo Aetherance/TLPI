@@ -116,7 +116,6 @@ int main(int argc,char **argv)
         cur++;
     }
 
-
     // -r
     
     int order = optTable[OPT__r_] ? -1 : 1 ;
