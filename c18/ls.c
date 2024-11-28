@@ -7,7 +7,9 @@
 #include<stdlib.h>
 #include<unistd.h>
 #include<sys/ioctl.h>
-#include<assert.h>
+#include<pwd.h>
+#include<grp.h>
+#include<time.h>
 
 #define LIST_SIZE 2097152
 #define PATH_SIZE 1000
@@ -69,8 +71,8 @@ int main(int argc,char **argv)
     
     static struct ifm ifmlist[LIST_SIZE];// list
     struct ifm * cur = ifmlist,*end;
+    
 
-    // name 和 statbuf存放
 
     int all_name_count = 0;
     static int total_name_len = 0;
@@ -211,31 +213,28 @@ int main(int argc,char **argv)
             else printf("-");
 
             // 所有者权限
-            if(readifm->buf__stat.st_mode & S_IRUSR)printf("r");
-            else printf("-");
-            if(readifm->buf__stat.st_mode & S_IWUSR)printf("w");
-            else printf("-");
-            if(readifm->buf__stat.st_mode & S_IXUSR)printf("x");
-            else printf("-");
-
+            printf(readifm->buf__stat.st_mode & S_IRUSR?"r":"-");
+            printf(readifm->buf__stat.st_mode & S_IWUSR?"w":"-");
+            printf(readifm->buf__stat.st_mode & S_IXUSR?"x":"-");
             //所属组权限
-            if(readifm->buf__stat.st_mode & S_IRGRP)printf("r");
-            else printf("-");
-            if(readifm->buf__stat.st_mode & S_IWGRP)printf("w");
-            else printf("-");
-            if(readifm->buf__stat.st_mode & S_IXGRP)printf("x");
-            else printf("-");
+            printf(readifm->buf__stat.st_mode & S_IRGRP?"r":"-");
+            printf(readifm->buf__stat.st_mode & S_IWGRP?"w":"-");
+            printf(readifm->buf__stat.st_mode & S_IXGRP?"x":"-");
 
             //其他用户权限
-            if(readifm->buf__stat.st_mode & S_IROTH)printf("r");
-            else printf("-");
-            if(readifm->buf__stat.st_mode & S_IWOTH)printf("w");
-            else printf("-");
-            if(readifm->buf__stat.st_mode & S_IXOTH)printf("x");
-            else printf("-");
+            printf(readifm->buf__stat.st_mode & S_IROTH?"r":"-");
+            printf(readifm->buf__stat.st_mode & S_IWOTH?"w":"-");
+            printf(readifm->buf__stat.st_mode & S_IXOTH?"x":"-");
 
-
-
+            printf(" %lu",readifm->buf__stat.st_nlink);
+            printf(" %s",getpwuid(readifm->buf__stat.st_uid)->pw_name);
+            printf(" %s",getgrgid(readifm->buf__stat.st_gid)->gr_name);
+            printf(" %lu",readifm->buf__stat.st_size);
+            
+            struct tm * time = localtime(&readifm->buf__stat.st_mtime);
+            char time_buf[64];
+            strftime(time_buf, 64, "%m月 %d %H:%M",time);
+            printf("%s",time_buf);
 
             printf("\n");
         }
