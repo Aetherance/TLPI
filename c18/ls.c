@@ -32,16 +32,16 @@ struct ifm
 
 int opt_count_sum = 0;
 int opt;    // temp
-char optable[256] = {};  // 01 table
+char optTable[256] = {};  // 01 table
 char filepath[FILE_PATH_SIZE] = ".";
 
 int main(int argc,char **argv)
-{
+{      
     // getopt
     while((opt = getopt(argc,argv,"alRtris"))!=-1)
     {
-        optable[opt] = 1;
-        //opt_count_sum += optable[opt];
+        optTable[opt] = 1;
+        //opt_count_sum += optTable[opt];
     }
 
     char ** arcu = argv+1;
@@ -98,10 +98,10 @@ int main(int argc,char **argv)
 
         total_name_len += strlen(cur->rdirent->d_name) + 2; // 确定总长度 判断是否需要切换输出模式
         //total_name_len-=2;  // 减去最后的两个空格
-        if(optable[OPT__s_]) total_name_len += 3;
-        if(optable[OPT__i_]) total_name_len += 8;
+        if(optTable[OPT__s_]) total_name_len += 3;
+        if(optTable[OPT__i_]) total_name_len += 8;
 
-        if(optable[OPT__a_])blockSum += cur->buf__stat.st_blocks/2; // why
+        if(optTable[OPT__a_])blockSum += cur->buf__stat.st_blocks/2; // why
         else if((cur->rdirent->d_name)[0]!='.')blockSum += cur->buf__stat.st_blocks/2;
 
         all_name_count++;
@@ -111,7 +111,7 @@ int main(int argc,char **argv)
 
     // -r
     
-    int order = optable[OPT__r_] ? -1 : 1 ;
+    int order = optTable[OPT__r_] ? -1 : 1 ;
 
     // sort
 
@@ -151,7 +151,7 @@ int main(int argc,char **argv)
     // get_sort_mode
 
     FP sort_mode = sort_init;
-    if(optable[OPT__t_])sort_mode = sort_by_change_time;
+    if(optTable[OPT__t_])sort_mode = sort_by_change_time;
     qsort(ifmlist,all_name_count,sizeof(struct ifm),sort_mode);
 
 
@@ -165,13 +165,13 @@ int main(int argc,char **argv)
 
     // opt_s using
 
-    if(optable[OPT__s_])printf("总计 %zu\n",blockSum);
+    if(optTable[OPT__l_]||optTable[OPT__s_])printf("总计 %zu\n",blockSum);
 
     // read from ifm
     struct ifm * readifm = ifmlist;
     while(readifm!=cur)
     {
-        if(!optable[OPT__a_])
+        if(!optTable[OPT__a_])
             if(    !strcmp(readifm->rdirent->d_name,".")||!strcmp(readifm->rdirent->d_name,"..")
             ||*readifm->rdirent->d_name=='.')
                 {
@@ -182,7 +182,7 @@ int main(int argc,char **argv)
     // print
 
         // 输出格式
-        if(!optable[OPT__l_]&&line_print_now == all_name_count/divide_count-1)
+        if(!optTable[OPT__l_]&&line_print_now == all_name_count/divide_count-1)
         {
             printf("\b\b");
             printf("\n");
@@ -190,17 +190,17 @@ int main(int argc,char **argv)
             line_print_now = 0;
         }
 
-        if(optable[OPT__i_])
+        if(optTable[OPT__i_])
         {
             printf("%lu ",readifm->rdirent->d_ino);
         }
 
-        if(optable[OPT__s_])
+        if(optTable[OPT__s_])
         {
             printf("%2lu ",readifm->buf__stat.st_blocks/2);     // why
         }
 
-        if(optable[OPT__l_])    // -l
+        if(optTable[OPT__l_])    // -l
         {
             // 第一列
             if(S_ISDIR(readifm->buf__stat.st_mode))printf("d");
@@ -211,19 +211,28 @@ int main(int argc,char **argv)
             else printf("-");
 
             // 所有者权限
-
-            
-
-
+            if(readifm->buf__stat.st_mode & S_IRUSR)printf("r");
+            else printf("-");
+            if(readifm->buf__stat.st_mode & S_IWUSR)printf("w");
+            else printf("-");
+            if(readifm->buf__stat.st_mode & S_IXUSR)printf("x");
+            else printf("-");
 
             //所属组权限
-
-
-
-
+            if(readifm->buf__stat.st_mode & S_IRGRP)printf("r");
+            else printf("-");
+            if(readifm->buf__stat.st_mode & S_IWGRP)printf("w");
+            else printf("-");
+            if(readifm->buf__stat.st_mode & S_IXGRP)printf("x");
+            else printf("-");
 
             //其他用户权限
-
+            if(readifm->buf__stat.st_mode & S_IROTH)printf("r");
+            else printf("-");
+            if(readifm->buf__stat.st_mode & S_IWOTH)printf("w");
+            else printf("-");
+            if(readifm->buf__stat.st_mode & S_IXOTH)printf("x");
+            else printf("-");
 
 
 
@@ -271,6 +280,6 @@ int main(int argc,char **argv)
     }
     
 
-    if(!optable[OPT__l_])printf("\n");
+    if(!optTable[OPT__l_])printf("\n");
     return  0;
 }
