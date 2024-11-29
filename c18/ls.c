@@ -1,3 +1,5 @@
+// 加入多文件显示
+
 #include<stdio.h>
 #include<sys/stat.h>
 #include<string.h>
@@ -11,7 +13,7 @@
 #include<grp.h>
 #include<time.h>
 
-#define LIST_SIZE 1613167
+#define LIST_SIZE 2097152
 #define PATH_SIZE 1000
 #define FILE_PATH_SIZE 128
 #define FILE_COUNT_MAX 25565
@@ -39,10 +41,9 @@ char optTable[256] = {};  // 01 table
 char filepath[FILE_COUNT_MAX][FILE_PATH_SIZE] = {"."};
 int FileNameCount = 1;
 int FileNameRead = 0;
-char fatherPath[100] = ".";
+
 // sort
 int order = 1;
-int FileNameInCount = 0;
 
 int sort_init(const void * ptr1, const void * ptr2)
 {
@@ -75,11 +76,9 @@ int sort_by_change_time(const void * ptr1, const void * ptr2)
         return -1 * order;
     return 0;
 }
-static struct ifm ifmlist[LIST_SIZE];// list
 
 int main(int argc,char **argv)
-{
-    optTable['R'] = 1;
+{   
     // getopt
     while((opt = getopt(argc,argv,"alRtris"))!=-1)
     {
@@ -100,9 +99,6 @@ int main(int argc,char **argv)
         arcu++;
     }
 
-
-    FLAG:
-
     while (FileNameRead<FileNameCount)
     {
         if(FileNameCount>1)
@@ -119,9 +115,9 @@ int main(int argc,char **argv)
             return 1;
         }
         
-        
+        static struct ifm ifmlist[LIST_SIZE];// list
         struct ifm * cur = ifmlist,*end;
-
+        
         int all_name_count = 0;
         int total_name_len = 0;
         int temp_line_len = 0;
@@ -161,18 +157,21 @@ int main(int argc,char **argv)
                 fileSizeLenMax = fileSizeLen;
             
             all_name_count++;
-            FileNameInCount = all_name_count;
             cur++;
         }
+
 
         // -r
         order = optTable[OPT__r_] ? -1 : 1 ;
         
+
         // get_sort_mode
 
         FP sort_mode = sort_init;
         if(optTable[OPT__t_])sort_mode = sort_by_change_time;
         qsort(ifmlist,all_name_count,sizeof(struct ifm),sort_mode);
+
+
 
         // get_print_format
 
@@ -180,6 +179,7 @@ int main(int argc,char **argv)
         ioctl(STDIN_FILENO,TIOCGWINSZ,&win);
         divide_count = total_name_len / win.ws_col + 1;
             
+
         // opt_s using
 
         if(optTable[OPT__l_]||optTable[OPT__s_])printf("总计 %zu\n",blockSum);
@@ -195,6 +195,7 @@ int main(int argc,char **argv)
                         readifm++;
                         continue;
                     }
+
         // print
 
         void PrintList()
@@ -296,33 +297,9 @@ int main(int argc,char **argv)
             readifm ++;
         }
         
-        
         if(!optTable[OPT__l_])printf("\n");
         FileNameRead ++;
         if(FileNameCount>1&&FileNameCount!=FileNameRead)printf("\n");
-    }
-    
-    if(optTable[OPT__R_])
-    {
-        FileNameCount = 0;
-        struct ifm *reRead = ifmlist;
-        for(int i = 0;i<FileNameInCount;i++)
-        {
-            if(S_ISDIR(reRead->buf__stat.st_mode)&&strcmp(reRead->rdirent->d_name,".")&&strcmp(reRead->rdirent->d_name,".."))
-            {
-                char temp[1000];
-                
-                sprintf(temp,"%s/%s",fatherPath,reRead->rdirent->d_name);
-                strcpy(filepath[FileNameCount++],temp);
-            }
-            
-            reRead ++;
-        }
-            
-
-        FileNameRead = 0;
-        if(FileNameCount)goto FLAG;
-
     }
     return  0;
 }
