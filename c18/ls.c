@@ -13,10 +13,12 @@
 #include<grp.h>
 #include<time.h>
 
-#define LIST_SIZE 2097152
-#define PATH_SIZE 1000
-#define FILE_PATH_SIZE 128
-#define FILE_COUNT_MAX 25565
+#define LIST_SIZE 20970
+#define PATH_SIZE 4048
+#define FILE_PATH_SIZE 2000
+#define FILE_COUNT_MAX 25600
+
+#define Xfile "\033[32m\033[1m"
 
 #define OPT__a_ 'a'
 #define OPT__l_ 'l'
@@ -31,16 +33,17 @@ typedef int(*FP)(const void *, const void *);
 // ifm
 struct ifm
 {
-    struct dirent *rdirent;
+    struct dirent rdirent;
     struct stat buf__stat;
 };
 
 int opt_count_sum = 0;
 int opt;    // temp
 char optTable[256] = {};  // 01 table
-char filepath[FILE_COUNT_MAX][FILE_PATH_SIZE] = {"."};
+char **filepath;
 int FileNameCount = 1;
 int FileNameRead = 0;
+char fatherPath[10000];
 
 // sort
 int order = 1;
@@ -49,22 +52,22 @@ int sort_init(const void * ptr1, const void * ptr2)
 {
     struct ifm * pos  = (struct ifm*)ptr1, * aftpos = (struct ifm*)ptr2;
     
-    if(*(pos->rdirent->d_name)=='.'||(*(aftpos->rdirent->d_name)=='.'&&*(pos->rdirent->d_name+1)!='\0'))
+    if(*(pos->rdirent.d_name)=='.'||(*(aftpos->rdirent.d_name)=='.'&&*(pos->rdirent.d_name+1)!='\0'))
     {
-        if(strstr(pos->rdirent->d_name+1,aftpos->rdirent->d_name+1)!=NULL)
+        if(strstr(pos->rdirent.d_name+1,aftpos->rdirent.d_name+1)!=NULL)
             return 1 * order;
-        if(strstr(aftpos->rdirent->d_name+1,pos->rdirent->d_name+1)!=NULL)
+        if(strstr(aftpos->rdirent.d_name+1,pos->rdirent.d_name+1)!=NULL)
             return -1 * order;
         
-        return strcmp(pos->rdirent->d_name+1,aftpos->rdirent->d_name+1) * order; 
+        return strcmp(pos->rdirent.d_name+1,aftpos->rdirent.d_name+1) * order; 
     }
     // 如果前面的部分一样，把长的排在后面
-    if(strstr(pos->rdirent->d_name,aftpos->rdirent->d_name)!=NULL)
+    if(strstr(pos->rdirent.d_name,aftpos->rdirent.d_name)!=NULL)
         return 1 * order;
-    if(strstr(aftpos->rdirent->d_name,pos->rdirent->d_name)!=NULL)
+    if(strstr(aftpos->rdirent.d_name,pos->rdirent.d_name)!=NULL)
         return -1 * order;
 
-    return strcmp(pos->rdirent->d_name,aftpos->rdirent->d_name) * order;
+    return strcmp(pos->rdirent.d_name,aftpos->rdirent.d_name) * order;
 }
 
 int sort_by_change_time(const void * ptr1, const void * ptr2)
@@ -79,6 +82,15 @@ int sort_by_change_time(const void * ptr1, const void * ptr2)
 
 int main(int argc,char **argv)
 {   
+
+    filepath = (char **)malloc(8000000);
+    filepath[0] = (char *)malloc(1024);
+    strcpy(filepath[0],".");
+
+    // argc = 2;
+    // argv[1] = "/bin";
+    //optTable[OPT__R_] = 1;
+    strcpy(fatherPath,filepath[0]);
     // getopt
     while((opt = getopt(argc,argv,"alRtris"))!=-1)
     {
@@ -90,10 +102,11 @@ int main(int argc,char **argv)
 
     if(argc>1&&opt_count_sum<argc-1)FileNameCount--;
 
-    while(*arcu!=NULL)
+    while(*arcu!=NULL&&arcu<argv+argc)
     {
         if(**arcu != '-')
         {
+            filepath[FileNameCount] = (char *)realloc(filepath[FileNameCount],(strlen(*arcu)+1)* sizeof(char));
             strcpy(filepath[FileNameCount++],*arcu);
         }
         arcu++;
@@ -101,7 +114,7 @@ int main(int argc,char **argv)
 
     while (FileNameRead<FileNameCount)
     {
-        if(FileNameCount>1)
+        if(opendir(filepath[FileNameRead])!=NULL&&FileNameCount>1||optTable[OPT__R_])
             printf("%s:\n",filepath[FileNameRead]);
         // open
         DIR * dir = opendir(filepath[FileNameRead]);
@@ -111,11 +124,16 @@ int main(int argc,char **argv)
 
         if(dir == NULL)
         {
+            if(optTable[OPT__R_])
+            {
+                FileNameRead ++;
+                continue;
+            }
             printf("ls: 无法访问 '%s': 没有那个文件或目录\n",filepath[FileNameRead]);
             return 1;
         }
         
-        static struct ifm ifmlist[LIST_SIZE];// list
+        struct ifm * ifmlist = (struct ifm *)malloc(10000000000);
         struct ifm * cur = ifmlist,*end;
         
         int all_name_count = 0;
@@ -127,27 +145,30 @@ int main(int argc,char **argv)
         size_t blockSum = 0;
         int fileSizeLenMax = 0;
 
+        struct dirent * temp_dirent;
         // 读目录
-
-        while((cur->rdirent = readdir(dir))!=NULL)
+    int testcount = 0;
+        while((temp_dirent = readdir(dir))!=NULL)
         {
+            cur->rdirent = * temp_dirent;
             // get_max_len
-            if(strlen(cur->rdirent->d_name)>max_len)
-                max_len = strlen(cur->rdirent->d_name)+1;
+            //printf("Ptr's addr: %p %p\n",(void*)cur, (void*)&ifmlist[testcount]);
+            if(strlen(cur->rdirent.d_name)>max_len)
+                max_len = strlen(cur->rdirent.d_name)+1;
 
             //max_len = max_len>7?7:max_len;
 
             char path[PATH_SIZE];
-            sprintf(path,"%s/%s",filepath[FileNameRead],cur->rdirent->d_name);
+            sprintf(path,"%s/%s",filepath[FileNameRead],cur->rdirent.d_name);
             stat(path,&cur->buf__stat);
 
-            total_name_len += strlen(cur->rdirent->d_name) + 2; // 确定总长度 判断是否需要切换输出模式
+            total_name_len += strlen(cur->rdirent.d_name) + 2; // 确定总长度 判断是否需要切换输出模式
             //total_name_len-=2;  // 减去最后的两个空格
             if(optTable[OPT__s_]) total_name_len += 3;
             if(optTable[OPT__i_]) total_name_len += 8;
 
             if(optTable[OPT__a_])blockSum += cur->buf__stat.st_blocks/2; // why
-            else if((cur->rdirent->d_name)[0]!='.')blockSum += cur->buf__stat.st_blocks/2;
+            else if((cur->rdirent.d_name)[0]!='.')blockSum += cur->buf__stat.st_blocks/2;
 
             int temp = cur->buf__stat.st_size;
             int fileSizeLen = 0;
@@ -158,9 +179,20 @@ int main(int argc,char **argv)
             
             all_name_count++;
             cur++;
+            
+            testcount ++;
+            
+            if(testcount == 988)
+            {
+                
+                //goto FLAG;
+
+                printf("1");
+            }
         }
 
-
+        //FLAG:
+        
         // -r
         order = optTable[OPT__r_] ? -1 : 1 ;
         
@@ -190,8 +222,8 @@ int main(int argc,char **argv)
         {
             if(!optTable[OPT__a_])
                 if
-                (!strcmp(readifm->rdirent->d_name,".")||!strcmp(readifm->rdirent->d_name,"..")
-                ||*readifm->rdirent->d_name=='.'){
+                (!strcmp(readifm->rdirent.d_name,".")||!strcmp(readifm->rdirent.d_name,"..")
+                ||*readifm->rdirent.d_name=='.'){
                         readifm++;
                         continue;
                     }
@@ -200,22 +232,25 @@ int main(int argc,char **argv)
 
         void PrintList()
         {
+
             if(S_ISREG(readifm->buf__stat.st_mode)
             &&!(readifm->buf__stat.st_mode & S_IXUSR))
-                printf("%s",readifm->rdirent->d_name);
+                printf("%s",readifm->rdirent.d_name);
                 
             if(S_ISREG(readifm->buf__stat.st_mode)
             &&(readifm->buf__stat.st_mode & S_IXUSR))
-                printf("\033[1;32m%s\033[0m",readifm->rdirent->d_name);
+                printf("\033[1;32m%s\033[0m",readifm->rdirent.d_name);
                 
             if(S_ISDIR(readifm->buf__stat.st_mode))
-                printf("\033[1;34m%s\033[0m",readifm->rdirent->d_name);
+                printf("\033[1;34m%s\033[0m",readifm->rdirent.d_name);
+                
+            
                 
                 printf("  ");
         }
 
             // 输出格式
-            if(!optTable[OPT__l_]&&line_print_now == all_name_count/divide_count-1)
+            if(!optTable[OPT__l_]&&line_print_now == ((all_name_count/divide_count-1))/(optTable[OPT__R_]?2:1))
             {
                 printf("\b\b");
                 printf("\n");
@@ -225,7 +260,7 @@ int main(int argc,char **argv)
 
             if(optTable[OPT__i_])
             {
-                printf("%lu ",readifm->rdirent->d_ino);
+                printf("%lu ",readifm->rdirent.d_ino);
             }
 
             if(optTable[OPT__s_])
@@ -271,24 +306,26 @@ int main(int argc,char **argv)
 
                 printf("\n");
             }
-            else if(total_name_len<=win.ws_col)
+            else if(!optTable[OPT__R_]&&total_name_len<=win.ws_col)
             {
                 PrintList();
             }
             else
             {
-                temp_line_len += strlen(readifm->rdirent->d_name)+2;
-                temp_line_len += strlen(readifm->rdirent->d_name)+2;
+                temp_line_len += strlen(readifm->rdirent.d_name)+2;
+                temp_line_len += strlen(readifm->rdirent.d_name)+2;
+
                 if(S_ISREG(readifm->buf__stat.st_mode)
                 &&!(readifm->buf__stat.st_mode & S_IXUSR))
-                    printf("%-*s",max_len,readifm->rdirent->d_name);
+                    printf("%-*s",max_len,readifm->rdirent.d_name);
                 
                 if(S_ISREG(readifm->buf__stat.st_mode)
                 &&(readifm->buf__stat.st_mode & S_IXUSR))
-                    printf("\033[1;32m%-*s\033[0m",max_len,readifm->rdirent->d_name);
+                    printf("\033[1;32m%-*s\033[0m",max_len,readifm->rdirent.d_name);   // 可执行文件
                 
                 if(S_ISDIR(readifm->buf__stat.st_mode))
-                    printf("\033[1;34m%-*s\033[0m",max_len,readifm->rdirent->d_name);
+                    printf("\033[34m\033[1m""%-*s\033[0m",max_len,readifm->rdirent.d_name);
+                
                 
                 printf(" ");
             }
@@ -300,6 +337,29 @@ int main(int argc,char **argv)
         if(!optTable[OPT__l_])printf("\n");
         FileNameRead ++;
         if(FileNameCount>1&&FileNameCount!=FileNameRead)printf("\n");
+        
+        if(optTable[OPT__R_])
+        {
+            if(FileNameCount){
+                strcpy(fatherPath,filepath[0]);
+                for(struct ifm * RfileNameRead = ifmlist;RfileNameRead<readifm;RfileNameRead++)
+                {
+                    if(S_ISDIR(RfileNameRead->buf__stat.st_mode)&&*RfileNameRead->rdirent.d_name!='.')
+                    {
+                        filepath[FileNameCount] = (char *)malloc(1024);
+                        sprintf(filepath[FileNameCount++],"%s/%s",fatherPath,RfileNameRead->rdirent.d_name);
+                    }
+                }
+            }
+            for(int i = 1;i<FileNameCount;i++)
+            {
+                strcpy(filepath[i-1],filepath[i]);
+            }
+            FileNameCount--;
+            //strcpy(fatherPath,filepath[0]);
+
+            FileNameRead = 0;
+        }
     }
     return  0;
 }
