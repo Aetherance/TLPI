@@ -1,4 +1,4 @@
-// 加入多文件显示
+// 修复了文件数目较多的目录打印乱码的bug
 
 #include<stdio.h>
 #include<sys/stat.h>
