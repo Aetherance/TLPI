@@ -51,6 +51,7 @@ int order = 1;
 
 void R();
 
+
 int sort_init(const void * ptr1, const void * ptr2)
 {
     struct ifm * pos  = (struct ifm*)ptr1, * aftpos = (struct ifm*)ptr2;
@@ -85,6 +86,8 @@ int sort_by_change_time(const void * ptr1, const void * ptr2)
 
 int main(int argc,char **argv)
 {   
+    optTable['R'] = 1;
+
     filepath = (char **)malloc(8000000);
     filepath[0] = (char *)malloc(1024);
     strcpy(filepath[0],".");
@@ -114,7 +117,7 @@ int main(int argc,char **argv)
     // RRRRRRRRRRRRRRRRRRRRRRRR
     if(optTable[OPT__R_])
     {
-        R();
+        R(filepath[0]);
         return 0;
     }
     // RRRRRRRRRRRRRRRRRRRRRRRR
@@ -348,50 +351,62 @@ int main(int argc,char **argv)
     }
     return  0;
 }
-void R()
+void R(char * Rfile)
 {
-    int readQcount = 0;
-    char Rfiles[20][1024];
-    for(int i = 0;i<FileNameCount;i++)
-        strcpy(Rfiles[i],filepath[i]);
     
-    int RfileCount = 0;
-    struct ifm * Rarr = (struct ifm *)malloc(sizeof(struct ifm)*Rsize);
+    struct ifm * Rlist = (struct ifm *)malloc(sizeof(struct ifm) * 9000000);
 
-    for(int i = 0;i<FileNameCount;i++)
+    DIR * rdir = opendir(Rfile);
+    if(rdir == NULL)exit(-1);
+
+    int count4q = 0;
+    struct dirent * trdir;
+    for(int i = 0;(trdir = readdir(rdir))!=NULL;i++,count4q++)
     {
-        DIR * Rdir = opendir(Rfiles[i]);
-
-
-        struct dirent * rtempdir;
-        while(rtempdir = readdir(Rdir))
+        char temp[2000];
+        Rlist[i].rdirent = *trdir;
+        sprintf(temp,"%s/%s",Rfile,Rlist[i].rdirent.d_name);
+        stat(temp,&Rlist[i].buf__stat);
+    }
+    qsort(Rlist,count4q,sizeof(struct ifm),sort_init);
+    printf("%s:\n\n",Rfile);
+    for(int i = 0;i<count4q;i++)
+    {
+        if(S_ISDIR(Rlist[i].buf__stat.st_mode))
         {
-            Rarr[i].rdirent = *rtempdir;
-            char temp[2000];
-            sprintf(temp,"%s/%s",Rfiles[i],Rarr->rdirent.d_name);
-
-            stat(temp,&Rarr[i].buf__stat);
-
-            readQcount ++;
+            printf("\033[1;5;34m""%s\n""\033[0m",Rlist[i].rdirent.d_name);
         }
-        qsort(Rarr,readQcount,sizeof(struct ifm),sort_init);
-        for(int i = 0;i<readQcount;i++)
+        else if(Rlist[i].buf__stat.st_mode&S_IXUSR)
         {
-            printf("%s\n",Rarr[i].rdirent.d_name);
+            printf("\033[1;5;32m""%s\n""\033[0m",Rlist[i].rdirent.d_name);
+        }
+        else if(strstr(Rlist[i].rdirent.d_name,".png")!=NULL)
+        {
+            printf("\033[1;5;35m""%s\n""\033[0m",Rlist[i].rdirent.d_name);
+        }
+        else 
+        {
+            printf("%s\n",Rlist[i].rdirent.d_name);
+        }
+        
+    }
+
+    for(int i = 0;i<count4q;i++)
+    {
+        if(S_ISDIR(Rlist[i].buf__stat.st_mode)&&strcmp(Rlist[i].rdirent.d_name, ".") != 0 && strcmp(Rlist[i].rdirent.d_name, "..") != 0)
+        {
+            char go[1000];
+            sprintf(go,"%s/%s",Rfile,Rlist[i].rdirent.d_name);
+            struct stat ng;
+            lstat(go,&ng);
+            if(S_ISLNK(ng.st_mode))
+            {
+                continue;
+            }
+            
+            R(go);
         }
     }
-    
 
 
-
-
-
-
-
-
-
-
-
-
-
-};
+}
