@@ -17,6 +17,7 @@
 #define PATH_SIZE 4048
 #define FILE_PATH_SIZE 2000
 #define FILE_COUNT_MAX 25600
+#define Rsize 102400
 
 #define Xfile "\033[32m\033[1m"
 
@@ -47,6 +48,8 @@ char fatherPath[10000];
 
 // sort
 int order = 1;
+
+void R();
 
 int sort_init(const void * ptr1, const void * ptr2)
 {
@@ -82,14 +85,10 @@ int sort_by_change_time(const void * ptr1, const void * ptr2)
 
 int main(int argc,char **argv)
 {   
-
     filepath = (char **)malloc(8000000);
     filepath[0] = (char *)malloc(1024);
     strcpy(filepath[0],".");
 
-    // argc = 2;
-    // argv[1] = "/bin";
-    //optTable[OPT__R_] = 1;
     strcpy(fatherPath,filepath[0]);
     // getopt
     while((opt = getopt(argc,argv,"alRtris"))!=-1)
@@ -111,6 +110,14 @@ int main(int argc,char **argv)
         }
         arcu++;
     }
+
+    // RRRRRRRRRRRRRRRRRRRRRRRR
+    if(optTable[OPT__R_])
+    {
+        R();
+        return 0;
+    }
+    // RRRRRRRRRRRRRRRRRRRRRRRR
 
     while (FileNameRead<FileNameCount)
     {
@@ -338,28 +345,53 @@ int main(int argc,char **argv)
         FileNameRead ++;
         if(FileNameCount>1&&FileNameCount!=FileNameRead)printf("\n");
         
-        if(optTable[OPT__R_])
-        {
-            if(FileNameCount){
-                strcpy(fatherPath,filepath[0]);
-                for(struct ifm * RfileNameRead = ifmlist;RfileNameRead<readifm;RfileNameRead++)
-                {
-                    if(S_ISDIR(RfileNameRead->buf__stat.st_mode)&&*RfileNameRead->rdirent.d_name!='.')
-                    {
-                        filepath[FileNameCount] = (char *)malloc(1024);
-                        sprintf(filepath[FileNameCount++],"%s/%s",fatherPath,RfileNameRead->rdirent.d_name);
-                    }
-                }
-            }
-            for(int i = 1;i<FileNameCount;i++)
-            {
-                strcpy(filepath[i-1],filepath[i]);
-            }
-            FileNameCount--;
-            //strcpy(fatherPath,filepath[0]);
-
-            FileNameRead = 0;
-        }
     }
     return  0;
 }
+void R()
+{
+    int readQcount = 0;
+    char Rfiles[20][1024];
+    for(int i = 0;i<FileNameCount;i++)
+        strcpy(Rfiles[i],filepath[i]);
+    
+    int RfileCount = 0;
+    struct ifm * Rarr = (struct ifm *)malloc(sizeof(struct ifm)*Rsize);
+
+    for(int i = 0;i<FileNameCount;i++)
+    {
+        DIR * Rdir = opendir(Rfiles[i]);
+
+
+        struct dirent * rtempdir;
+        while(rtempdir = readdir(Rdir))
+        {
+            Rarr[i].rdirent = *rtempdir;
+            char temp[2000];
+            sprintf(temp,"%s/%s",Rfiles[i],Rarr->rdirent.d_name);
+
+            stat(temp,&Rarr[i].buf__stat);
+
+            readQcount ++;
+        }
+        qsort(Rarr,readQcount,sizeof(struct ifm),sort_init);
+        for(int i = 0;i<readQcount;i++)
+        {
+            printf("%s\n",Rarr[i].rdirent.d_name);
+        }
+    }
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+};

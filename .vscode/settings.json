@@ -5,7 +5,8 @@
         "algorithm": "c",
         "stdio.h": "c",
         "termios.h": "c",
-        "1.C": "cpp"
+        "1.C": "cpp",
+        "getopt.h": "c"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }
