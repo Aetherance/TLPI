@@ -45,6 +45,7 @@ char **filepath;
 int FileNameCount = 1;
 int FileNameRead = 0;
 char fatherPath[10000];
+unsigned char header[4];
 
 // sort
 int order = 1;
@@ -196,6 +197,7 @@ int main(int argc,char **argv)
         // -r
         order = optTable[OPT__r_] ? -1 : 1 ;
         
+
         // get_sort_mode
 
         FP sort_mode = sort_init;
@@ -218,12 +220,11 @@ int main(int argc,char **argv)
         while(readifm!=cur)
         {
             if(!optTable[OPT__a_])
-                if
-                (!strcmp(readifm->rdirent.d_name,".")||!strcmp(readifm->rdirent.d_name,"..")
-                ||*readifm->rdirent.d_name=='.'){
-                        readifm++;
-                        continue;
-                    }
+            if(!strcmp(readifm->rdirent.d_name,".")||!strcmp(readifm->rdirent.d_name,"..")||*readifm->rdirent.d_name=='.')
+            {
+                readifm++;
+                continue;
+            }
 
         // print
 
@@ -240,8 +241,6 @@ int main(int argc,char **argv)
                 
             if(S_ISDIR(readifm->buf__stat.st_mode))
                 printf("\033[1;34m%s\033[0m",readifm->rdirent.d_name);
-                
-            
                 
                 printf("  ");
         }
@@ -361,9 +360,12 @@ void R(char * Rfile)
     printf("%s:\n\n",Rfile);
     for(int i = 0;i<count4q;i++)
     {
-        if(OPT__l_)
+        if(!optTable[OPT__a_])
         {
-            if(optTable[OPT__l_])
+            if(*Rlist[i].rdirent.d_name=='.')
+                continue;
+        }
+        if(optTable[OPT__l_])
         {
         // 第一列
             if(S_ISDIR(Rlist[i].buf__stat.st_mode))printf("d");
@@ -397,24 +399,27 @@ void R(char * Rfile)
             strftime(time_buf, 64, "%m月 %d %H:%M",time);
             printf("%s ",time_buf);
         }
-        }
+
         if(S_ISDIR(Rlist[i].buf__stat.st_mode))
         {
             printf("\033[1;5;34m""%s\n\033[0m",Rlist[i].rdirent.d_name);
-        }
-        else if(Rlist[i].buf__stat.st_mode&S_IXUSR)
-        {
-            printf("\033[1;5;32m""%s\n\033[0m",Rlist[i].rdirent.d_name);
         }
         else if(strstr(Rlist[i].rdirent.d_name,".png")!=NULL)
         {
             printf("\033[1;5;35m""%s\n\033[0m",Rlist[i].rdirent.d_name);
         }
+        else if(Rlist[i].buf__stat.st_mode&S_IXUSR)
+        {
+            printf("\033[1;5;32m""%s\n\033[0m",Rlist[i].rdirent.d_name);
+        }
+        else if(strstr(Rlist[i].rdirent.d_name,".tar")!=NULL||strstr(Rlist[i].rdirent.d_name,".gz")!=NULL||strstr(Rlist[i].rdirent.d_name,".zip")!=NULL)
+        {
+            printf("\033[1;5;31m""%s\n\033[0m",Rlist[i].rdirent.d_name);
+        }
         else 
         {
             printf("%s\n",Rlist[i].rdirent.d_name);
         }
-        
     }
 
     for(int i = 0;i<count4q;i++)
@@ -426,8 +431,8 @@ void R(char * Rfile)
             struct stat ng;
             
             lstat(go,&ng);
-            
             if(ng.st_mode==-1)
+            
                 exit(1);
 
             if(S_ISLNK(ng.st_mode))
@@ -438,6 +443,5 @@ void R(char * Rfile)
             R(go);
         }
     }
-    closedir(rdir);
     free(Rlist);
 }
