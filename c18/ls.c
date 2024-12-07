@@ -1,4 +1,4 @@
-// 修复了文件数目较多的目录打印乱码的bug
+// 部分重构 -R可以遍历根目录了
 
 #include<stdio.h>
 #include<sys/stat.h>
@@ -196,14 +196,11 @@ int main(int argc,char **argv)
         // -r
         order = optTable[OPT__r_] ? -1 : 1 ;
         
-
         // get_sort_mode
 
         FP sort_mode = sort_init;
         if(optTable[OPT__t_])sort_mode = sort_by_change_time;
         qsort(ifmlist,all_name_count,sizeof(struct ifm),sort_mode);
-
-
 
         // get_print_format
 
@@ -326,7 +323,6 @@ int main(int argc,char **argv)
                 if(S_ISDIR(readifm->buf__stat.st_mode))
                     printf("\033[34m\033[1m""%-*s\033[0m",max_len,readifm->rdirent.d_name);
                 
-                
                 printf(" ");
             }
             
@@ -365,6 +361,43 @@ void R(char * Rfile)
     printf("%s:\n\n",Rfile);
     for(int i = 0;i<count4q;i++)
     {
+        if(OPT__l_)
+        {
+            if(optTable[OPT__l_])
+        {
+        // 第一列
+            if(S_ISDIR(Rlist[i].buf__stat.st_mode))printf("d");
+            else if(S_ISLNK(Rlist[i].buf__stat.st_mode))printf("l");
+            else if(S_ISBLK(Rlist[i].buf__stat.st_mode))printf("d");
+            else if(S_ISCHR(Rlist[i].buf__stat.st_mode))printf("c");
+            else if(S_ISCHR(Rlist[i].buf__stat.st_mode))printf("c");
+            else printf("-");
+
+            // 所有者权限
+            printf(Rlist[i].buf__stat.st_mode & S_IRUSR?"r":"-");
+            printf(Rlist[i].buf__stat.st_mode & S_IWUSR?"w":"-");
+            printf(Rlist[i].buf__stat.st_mode & S_IXUSR?"x":"-");
+            //所属组权限
+            printf(Rlist[i].buf__stat.st_mode & S_IRGRP?"r":"-");
+            printf(Rlist[i].buf__stat.st_mode & S_IWGRP?"w":"-");
+            printf(Rlist[i].buf__stat.st_mode & S_IXGRP?"x":"-");
+
+            //其他用户权限
+            printf(Rlist[i].buf__stat.st_mode & S_IROTH?"r":"-");
+            printf(Rlist[i].buf__stat.st_mode & S_IWOTH?"w":"-");
+            printf(Rlist[i].buf__stat.st_mode & S_IXOTH?"x":"-");
+
+            printf(" %lu",Rlist[i].buf__stat.st_nlink);
+            printf(" %s",getpwuid(Rlist[i].buf__stat.st_uid)->pw_name);
+            printf(" %s",getgrgid(Rlist[i].buf__stat.st_gid)->gr_name);
+            printf("%lu ",Rlist[i].buf__stat.st_size);
+            
+            struct tm * time = localtime(&Rlist[i].buf__stat.st_mtime);
+            char time_buf[64];
+            strftime(time_buf, 64, "%m月 %d %H:%M",time);
+            printf("%s ",time_buf);
+        }
+        }
         if(S_ISDIR(Rlist[i].buf__stat.st_mode))
         {
             printf("\033[1;5;34m""%s\n\033[0m",Rlist[i].rdirent.d_name);
@@ -405,5 +438,6 @@ void R(char * Rfile)
             R(go);
         }
     }
+    closedir(rdir);
     free(Rlist);
 }
