@@ -17,17 +17,15 @@
 #define PATH_SIZE 4048
 #define FILE_PATH_SIZE 2000
 #define FILE_COUNT_MAX 25600
-#define Rsize 102400
+#define Rsize 1024
 
-#define Xfile "\033[32m\033[1m"
-
-#define OPT__a_ 'a'
-#define OPT__l_ 'l'
-#define OPT__t_ 't'
-#define OPT__r_ 'r'
-#define OPT__R_ 'R'
-#define OPT__i_ 'i'
-#define OPT__s_ 's'
+#define OPT__A 'a'
+#define OPT__L 'l'
+#define OPT__T 't'
+#define OPT__R 'r'
+#define OPT_RR 'R'
+#define OPT__I 'i'
+#define OPT__S 's'
 
 typedef int(*FP)(const void *, const void *);
 
@@ -53,37 +51,10 @@ int order = 1;
 void R();
 
 
-int sort_init(const void * ptr1, const void * ptr2)
-{
-    struct ifm * pos  = (struct ifm*)ptr1, * aftpos = (struct ifm*)ptr2;
-    
-    if(*(pos->rdirent.d_name)=='.'||(*(aftpos->rdirent.d_name)=='.'&&*(pos->rdirent.d_name+1)!='\0'))
-    {
-        if(strstr(pos->rdirent.d_name+1,aftpos->rdirent.d_name+1)!=NULL)
-            return 1 * order;
-        if(strstr(aftpos->rdirent.d_name+1,pos->rdirent.d_name+1)!=NULL)
-            return -1 * order;
-        
-        return strcmp(pos->rdirent.d_name+1,aftpos->rdirent.d_name+1) * order; 
-    }
-    // 如果前面的部分一样，把长的排在后面
-    if(strstr(pos->rdirent.d_name,aftpos->rdirent.d_name)!=NULL)
-        return 1 * order;
-    if(strstr(aftpos->rdirent.d_name,pos->rdirent.d_name)!=NULL)
-        return -1 * order;
-
-    return strcmp(pos->rdirent.d_name,aftpos->rdirent.d_name) * order;
-}
-
-int sort_by_change_time(const void * ptr1, const void * ptr2)
-{
-    struct ifm * pos  = (struct ifm*)ptr1, * aftpos = (struct ifm*)ptr2;
-    if(pos->buf__stat.st_ctime<aftpos->buf__stat.st_ctime)
-        return 1 * order;
-    if(pos->buf__stat.st_ctime>aftpos->buf__stat.st_ctime)
-        return -1 * order;
-    return 0;
-}
+int sort_init(const void * ptr1, const void * ptr2);
+int sort_by_change_time(const void * ptr1, const void * ptr2);
+void PrintList(struct ifm * readifm);
+void PrintWithL(struct ifm *readifm);
 
 int main(int argc,char **argv)
 {   
@@ -114,17 +85,18 @@ int main(int argc,char **argv)
         arcu++;
     }
 
+    order = optTable[OPT__R] ? -1 : 1 ;
     // RRRRRRRRRRRRRRRRRRRRRRRR
-    if(optTable[OPT__R_])
+    if(optTable[OPT_RR])
     {
-        R(filepath[0]);
+        for(int i = 0;i<FileNameCount;i++)
+            R(filepath[i]);
         return 0;
     }
-    // RRRRRRRRRRRRRRRRRRRRRRRR
 
     while (FileNameRead<FileNameCount)
     {
-        if(opendir(filepath[FileNameRead])!=NULL&&FileNameCount>1||optTable[OPT__R_])
+        if(opendir(filepath[FileNameRead])!=NULL&&FileNameCount>1||optTable[OPT_RR])
             printf("%s:\n",filepath[FileNameRead]);
         // open
         DIR * dir = opendir(filepath[FileNameRead]);
@@ -134,7 +106,7 @@ int main(int argc,char **argv)
 
         if(dir == NULL)
         {
-            if(optTable[OPT__R_])
+            if(optTable[OPT_RR])
             {
                 FileNameRead ++;
                 continue;
@@ -145,7 +117,6 @@ int main(int argc,char **argv)
         
         struct ifm * ifmlist = (struct ifm *)malloc(10000000000);
         struct ifm * cur = ifmlist;
-        
         int all_name_count = 0;
         int total_name_len = 0;
         int temp_line_len = 0;
@@ -174,10 +145,10 @@ int main(int argc,char **argv)
 
             total_name_len += strlen(cur->rdirent.d_name) + 2; // 确定总长度 判断是否需要切换输出模式
             //total_name_len-=2;  // 减去最后的两个空格
-            if(optTable[OPT__s_]) total_name_len += 3;
-            if(optTable[OPT__i_]) total_name_len += 8;
+            if(optTable[OPT__S]) total_name_len += 3;
+            if(optTable[OPT__I]) total_name_len += 8;
 
-            if(optTable[OPT__a_])blockSum += cur->buf__stat.st_blocks/2; // why
+            if(optTable[OPT__A])blockSum += cur->buf__stat.st_blocks/2; // why
             else if((cur->rdirent.d_name)[0]!='.')blockSum += cur->buf__stat.st_blocks/2;
 
             int temp = cur->buf__stat.st_size;
@@ -192,61 +163,33 @@ int main(int argc,char **argv)
 
         }
 
-        //FLAG:
-        
-        // -r
-        order = optTable[OPT__r_] ? -1 : 1 ;
-        
-
         // get_sort_mode
 
         FP sort_mode = sort_init;
-        if(optTable[OPT__t_])sort_mode = sort_by_change_time;
+        if(optTable[OPT__T])sort_mode = sort_by_change_time;
         qsort(ifmlist,all_name_count,sizeof(struct ifm),sort_mode);
 
         // get_print_format
-
         static struct winsize win;
         ioctl(STDIN_FILENO,TIOCGWINSZ,&win);
         divide_count = total_name_len / win.ws_col + 1;
             
-
         // opt_s using
-
-        if(optTable[OPT__l_]||optTable[OPT__s_])printf("总计 %zu\n",blockSum);
+        if(optTable[OPT__L]||optTable[OPT__S])printf("总计 %zu\n",blockSum);
 
         // read from ifm
         struct ifm * readifm = ifmlist;
         while(readifm!=cur)
         {
-            if(!optTable[OPT__a_])
+            if(!optTable[OPT__A])
             if(!strcmp(readifm->rdirent.d_name,".")||!strcmp(readifm->rdirent.d_name,"..")||*readifm->rdirent.d_name=='.')
             {
                 readifm++;
                 continue;
             }
 
-        // print
-
-        void PrintList()
-        {
-
-            if(S_ISREG(readifm->buf__stat.st_mode)
-            &&!(readifm->buf__stat.st_mode & S_IXUSR))
-                printf("%s",readifm->rdirent.d_name);
-                
-            if(S_ISREG(readifm->buf__stat.st_mode)
-            &&(readifm->buf__stat.st_mode & S_IXUSR))
-                printf("\033[1;32m%s\033[0m",readifm->rdirent.d_name);
-                
-            if(S_ISDIR(readifm->buf__stat.st_mode))
-                printf("\033[1;34m%s\033[0m",readifm->rdirent.d_name);
-                
-                printf("  ");
-        }
-
             // 输出格式
-            if(!optTable[OPT__l_]&&line_print_now == ((all_name_count/divide_count-1))/(optTable[OPT__R_]?2:1))
+            if(!optTable[OPT__L]&&line_print_now == ((all_name_count/divide_count-1))/(optTable[OPT_RR]?2:1))
             {
                 printf("\b\b");
                 printf("\n");
@@ -254,57 +197,26 @@ int main(int argc,char **argv)
                 line_print_now = 0;
             }
 
-            if(optTable[OPT__i_])
+            if(optTable[OPT__I])
             {
                 printf("%lu ",readifm->rdirent.d_ino);
             }
 
-            if(optTable[OPT__s_])
+            if(optTable[OPT__S])
             {
                 printf("%2lu ",readifm->buf__stat.st_blocks/2);     // why
             }
 
-            if(optTable[OPT__l_])    // -l
+            if(optTable[OPT__L])    // -l
             {
-                // 第一列
-                if(S_ISDIR(readifm->buf__stat.st_mode))printf("d");
-                else if(S_ISLNK(readifm->buf__stat.st_mode))printf("l");
-                else if(S_ISBLK(readifm->buf__stat.st_mode))printf("d");
-                else if(S_ISCHR(readifm->buf__stat.st_mode))printf("c");
-                else if(S_ISCHR(readifm->buf__stat.st_mode))printf("c");
-                else printf("-");
-
-                // 所有者权限
-                printf(readifm->buf__stat.st_mode & S_IRUSR?"r":"-");
-                printf(readifm->buf__stat.st_mode & S_IWUSR?"w":"-");
-                printf(readifm->buf__stat.st_mode & S_IXUSR?"x":"-");
-                //所属组权限
-                printf(readifm->buf__stat.st_mode & S_IRGRP?"r":"-");
-                printf(readifm->buf__stat.st_mode & S_IWGRP?"w":"-");
-                printf(readifm->buf__stat.st_mode & S_IXGRP?"x":"-");
-
-                //其他用户权限
-                printf(readifm->buf__stat.st_mode & S_IROTH?"r":"-");
-                printf(readifm->buf__stat.st_mode & S_IWOTH?"w":"-");
-                printf(readifm->buf__stat.st_mode & S_IXOTH?"x":"-");
-
-                printf(" %lu",readifm->buf__stat.st_nlink);
-                printf(" %s",getpwuid(readifm->buf__stat.st_uid)->pw_name);
-                printf(" %s",getgrgid(readifm->buf__stat.st_gid)->gr_name);
-                printf("%*lu ",fileSizeLenMax+1,readifm->buf__stat.st_size);
-                
-                struct tm * time = localtime(&readifm->buf__stat.st_mtime);
-                char time_buf[64];
-                strftime(time_buf, 64, "%m月 %d %H:%M",time);
-                printf("%s ",time_buf);
-
-                PrintList();
+                PrintWithL(readifm);
+                PrintList(readifm);
 
                 printf("\n");
             }
-            else if(!optTable[OPT__R_]&&total_name_len<=win.ws_col)
+            else if(!optTable[OPT_RR]&&total_name_len<=win.ws_col)
             {
-                PrintList();
+                PrintList(readifm);
             }
             else
             {
@@ -329,17 +241,18 @@ int main(int argc,char **argv)
             readifm ++;
         }
         
-        if(!optTable[OPT__l_])printf("\n");
+        if(!optTable[OPT__L])printf("\n");
         FileNameRead ++;
         if(FileNameCount>1&&FileNameCount!=FileNameRead)printf("\n");
-        
+        closedir(dir);
     }
+    free(filepath);
     return  0;
 }
 void R(char * Rfile)
 {
     
-    struct ifm * Rlist = (struct ifm *)malloc(sizeof(struct ifm) * 20000000);
+    struct ifm * Rlist = (struct ifm *)malloc(sizeof(struct ifm) * 40000000);
 
     DIR * rdir = opendir(Rfile);
     if(rdir == NULL)
@@ -360,44 +273,23 @@ void R(char * Rfile)
     printf("%s:\n\n",Rfile);
     for(int i = 0;i<count4q;i++)
     {
-        if(!optTable[OPT__a_])
+        if(!optTable[OPT__A])
         {
             if(*Rlist[i].rdirent.d_name=='.')
                 continue;
         }
-        if(optTable[OPT__l_])
+        if(optTable[OPT__I])
         {
-        // 第一列
-            if(S_ISDIR(Rlist[i].buf__stat.st_mode))printf("d");
-            else if(S_ISLNK(Rlist[i].buf__stat.st_mode))printf("l");
-            else if(S_ISBLK(Rlist[i].buf__stat.st_mode))printf("d");
-            else if(S_ISCHR(Rlist[i].buf__stat.st_mode))printf("c");
-            else if(S_ISCHR(Rlist[i].buf__stat.st_mode))printf("c");
-            else printf("-");
+            printf("%lu ",Rlist[i].rdirent.d_ino);
+        }
 
-            // 所有者权限
-            printf(Rlist[i].buf__stat.st_mode & S_IRUSR?"r":"-");
-            printf(Rlist[i].buf__stat.st_mode & S_IWUSR?"w":"-");
-            printf(Rlist[i].buf__stat.st_mode & S_IXUSR?"x":"-");
-            //所属组权限
-            printf(Rlist[i].buf__stat.st_mode & S_IRGRP?"r":"-");
-            printf(Rlist[i].buf__stat.st_mode & S_IWGRP?"w":"-");
-            printf(Rlist[i].buf__stat.st_mode & S_IXGRP?"x":"-");
-
-            //其他用户权限
-            printf(Rlist[i].buf__stat.st_mode & S_IROTH?"r":"-");
-            printf(Rlist[i].buf__stat.st_mode & S_IWOTH?"w":"-");
-            printf(Rlist[i].buf__stat.st_mode & S_IXOTH?"x":"-");
-
-            printf(" %lu",Rlist[i].buf__stat.st_nlink);
-            printf(" %s",getpwuid(Rlist[i].buf__stat.st_uid)->pw_name);
-            printf(" %s",getgrgid(Rlist[i].buf__stat.st_gid)->gr_name);
-            printf("%lu ",Rlist[i].buf__stat.st_size);
-            
-            struct tm * time = localtime(&Rlist[i].buf__stat.st_mtime);
-            char time_buf[64];
-            strftime(time_buf, 64, "%m月 %d %H:%M",time);
-            printf("%s ",time_buf);
+        if(optTable[OPT__S])
+        {
+            printf("%2lu ",Rlist[i].buf__stat.st_blocks/2);     // why
+        }
+        if(optTable[OPT__L])
+        {
+            PrintWithL(&Rlist[i]);
         }
 
         if(S_ISDIR(Rlist[i].buf__stat.st_mode))
@@ -432,7 +324,6 @@ void R(char * Rfile)
             
             lstat(go,&ng);
             if(ng.st_mode==-1)
-            
                 exit(1);
 
             if(S_ISLNK(ng.st_mode))
@@ -444,4 +335,89 @@ void R(char * Rfile)
         }
     }
     free(Rlist);
+}
+
+
+int sort_init(const void * ptr1, const void * ptr2)
+{
+    struct ifm * pos  = (struct ifm*)ptr1, * aftpos = (struct ifm*)ptr2;
+    
+    if(*(pos->rdirent.d_name)=='.'||(*(aftpos->rdirent.d_name)=='.'&&*(pos->rdirent.d_name+1)!='\0'))
+    {
+        if(strstr(pos->rdirent.d_name+1,aftpos->rdirent.d_name+1)!=NULL)
+            return 1 * order;
+        if(strstr(aftpos->rdirent.d_name+1,pos->rdirent.d_name+1)!=NULL)
+            return -1 * order;
+        
+        return strcmp(pos->rdirent.d_name+1,aftpos->rdirent.d_name+1) * order; 
+    }
+    // 如果前面的部分一样，把长的排在后面
+    if(strstr(pos->rdirent.d_name,aftpos->rdirent.d_name)!=NULL)
+        return 1 * order;
+    if(strstr(aftpos->rdirent.d_name,pos->rdirent.d_name)!=NULL)
+        return -1 * order;
+
+    return strcmp(pos->rdirent.d_name,aftpos->rdirent.d_name) * order;
+}
+
+int sort_by_change_time(const void * ptr1, const void * ptr2)
+{
+    struct ifm * pos  = (struct ifm*)ptr1, * aftpos = (struct ifm*)ptr2;
+    if(pos->buf__stat.st_ctime<aftpos->buf__stat.st_ctime)
+        return 1 * order;
+    if(pos->buf__stat.st_ctime>aftpos->buf__stat.st_ctime)
+        return -1 * order;
+    return 0;
+}
+
+void PrintList(struct ifm * readifm)
+{
+
+    if(S_ISREG(readifm->buf__stat.st_mode)
+    &&!(readifm->buf__stat.st_mode & S_IXUSR))
+        printf("%s",readifm->rdirent.d_name);
+        
+    if(S_ISREG(readifm->buf__stat.st_mode)
+    &&(readifm->buf__stat.st_mode & S_IXUSR))
+        printf("\033[1;32m%s\033[0m",readifm->rdirent.d_name);
+        
+    if(S_ISDIR(readifm->buf__stat.st_mode))
+        printf("\033[1;34m%s\033[0m",readifm->rdirent.d_name);
+        
+        printf("  ");
+}
+
+void PrintWithL(struct ifm *readifm)
+{
+    // 第一列
+    if(S_ISDIR(readifm->buf__stat.st_mode))printf("d");
+    else if(S_ISLNK(readifm->buf__stat.st_mode))printf("l");
+    else if(S_ISBLK(readifm->buf__stat.st_mode))printf("d");
+    else if(S_ISCHR(readifm->buf__stat.st_mode))printf("c");
+    else if(S_ISCHR(readifm->buf__stat.st_mode))printf("c");
+    else printf("-");
+
+    // 所有者权限
+    printf(readifm->buf__stat.st_mode & S_IRUSR?"r":"-");
+    printf(readifm->buf__stat.st_mode & S_IWUSR?"w":"-");
+    printf(readifm->buf__stat.st_mode & S_IXUSR?"x":"-");
+    //所属组权限
+    printf(readifm->buf__stat.st_mode & S_IRGRP?"r":"-");
+    printf(readifm->buf__stat.st_mode & S_IWGRP?"w":"-");
+    printf(readifm->buf__stat.st_mode & S_IXGRP?"x":"-");
+
+    //其他用户权限
+    printf(readifm->buf__stat.st_mode & S_IROTH?"r":"-");
+    printf(readifm->buf__stat.st_mode & S_IWOTH?"w":"-");
+    printf(readifm->buf__stat.st_mode & S_IXOTH?"x":"-");
+
+    printf(" %lu",readifm->buf__stat.st_nlink);
+    printf(" %s",getpwuid(readifm->buf__stat.st_uid)->pw_name);
+    printf(" %s",getgrgid(readifm->buf__stat.st_gid)->gr_name);
+    printf("%lu ",readifm->buf__stat.st_size);
+    
+    struct tm * time = localtime(&readifm->buf__stat.st_mtime);
+    char time_buf[64];
+    strftime(time_buf, 64, "%m月 %d %H:%M",time);
+    printf("%s ",time_buf);
 }
