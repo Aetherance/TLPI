@@ -17,7 +17,7 @@
 #define PATH_SIZE 4048
 #define FILE_PATH_SIZE 2000
 #define FILE_COUNT_MAX 25600
-#define Rsize 1024
+#define Rsize 40000000
 
 #define OPT__A 'a'
 #define OPT__L 'l'
@@ -91,15 +91,18 @@ int main(int argc,char **argv)
     {
         for(int i = 0;i<FileNameCount;i++)
             R(filepath[i]);
+        for(int i = 0;i<FileNameCount;i++)
+            free(filepath[i]);
+        free(filepath);
         return 0;
     }
 
     while (FileNameRead<FileNameCount)
     {
-        if(opendir(filepath[FileNameRead])!=NULL&&FileNameCount>1||optTable[OPT_RR])
-            printf("%s:\n",filepath[FileNameRead]);
         // open
         DIR * dir = opendir(filepath[FileNameRead]);
+        if(dir!=NULL&&FileNameCount>1||optTable[OPT_RR])
+            printf("%s:\n",filepath[FileNameRead]);
         struct dirent * rdirent;
         struct stat buf__stat;    // 静态开辟空间
         struct stat * statbuf = &buf__stat;
@@ -115,7 +118,7 @@ int main(int argc,char **argv)
             return 1;
         }
         
-        struct ifm * ifmlist = (struct ifm *)malloc(10000000000);
+        struct ifm * ifmlist = (struct ifm *)malloc(2048*sizeof(struct ifm));
         struct ifm * cur = ifmlist;
         int all_name_count = 0;
         int total_name_len = 0;
@@ -162,6 +165,7 @@ int main(int argc,char **argv)
             cur++;
 
         }
+        closedir(dir);
 
         // get_sort_mode
 
@@ -244,15 +248,17 @@ int main(int argc,char **argv)
         if(!optTable[OPT__L])printf("\n");
         FileNameRead ++;
         if(FileNameCount>1&&FileNameCount!=FileNameRead)printf("\n");
-        closedir(dir);
+        free(ifmlist);
     }
+    for(int i = 0;i<FileNameCount;i++)
+        free(filepath[i]);
     free(filepath);
     return  0;
 }
 void R(char * Rfile)
 {
     
-    struct ifm * Rlist = (struct ifm *)malloc(sizeof(struct ifm) * 40000000);
+    struct ifm * Rlist = (struct ifm *)malloc(sizeof(struct ifm) * Rsize);
 
     DIR * rdir = opendir(Rfile);
     if(rdir == NULL)
@@ -334,6 +340,7 @@ void R(char * Rfile)
             R(go);
         }
     }
+    closedir(rdir);
     free(Rlist);
 }
 
