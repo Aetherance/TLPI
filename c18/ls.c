@@ -42,8 +42,6 @@ char optTable[256] = {};  // 01 table
 char **filepath;
 int FileNameCount = 1;
 int FileNameRead = 0;
-char fatherPath[10000];
-unsigned char header[4];
 
 // sort
 int order = 1;
@@ -58,12 +56,10 @@ void PrintWithL(struct ifm *readifm);
 
 int main(int argc,char **argv)
 {   
-    filepath = (char **)malloc(80000);
-    filepath[0] = (char *)malloc(1024);
+    filepath = (char **)malloc(800);
+    filepath[0] = (char *)malloc(64);
     strcpy(filepath[0],".");
 
-
-    strcpy(fatherPath,filepath[0]);
     // getopt
     while((opt = getopt(argc,argv,"alRtris"))!=-1)
     {
@@ -73,7 +69,17 @@ int main(int argc,char **argv)
 
     char ** arcu = argv+1;
 
-    if(argc>1&&opt_count_sum<argc-1)FileNameCount--;
+    while(*arcu!=NULL&&arcu<argv+argc)
+    {
+        if(**arcu != '-')
+        {
+            FileNameCount--;
+            break;
+        }
+        arcu ++;
+    }
+
+    arcu = argv+1;
 
     while(*arcu!=NULL&&arcu<argv+argc)
     {
