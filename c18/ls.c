@@ -1,4 +1,4 @@
-// 部分重构 -R可以遍历根目录了
+// 几乎 sort
 
 #include<stdio.h>
 #include<sys/stat.h>
