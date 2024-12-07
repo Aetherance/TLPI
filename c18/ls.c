@@ -86,11 +86,10 @@ int sort_by_change_time(const void * ptr1, const void * ptr2)
 
 int main(int argc,char **argv)
 {   
-    optTable['R'] = 1;
-
-    filepath = (char **)malloc(8000000);
+    filepath = (char **)malloc(80000);
     filepath[0] = (char *)malloc(1024);
     strcpy(filepath[0],".");
+
 
     strcpy(fatherPath,filepath[0]);
     // getopt
@@ -144,7 +143,7 @@ int main(int argc,char **argv)
         }
         
         struct ifm * ifmlist = (struct ifm *)malloc(10000000000);
-        struct ifm * cur = ifmlist,*end;
+        struct ifm * cur = ifmlist;
         
         int all_name_count = 0;
         int total_name_len = 0;
@@ -157,7 +156,7 @@ int main(int argc,char **argv)
 
         struct dirent * temp_dirent;
         // 读目录
-    int testcount = 0;
+
         while((temp_dirent = readdir(dir))!=NULL)
         {
             cur->rdirent = * temp_dirent;
@@ -189,16 +188,7 @@ int main(int argc,char **argv)
             
             all_name_count++;
             cur++;
-            
-            testcount ++;
-            
-            if(testcount == 988)
-            {
-                
-                //goto FLAG;
 
-                printf("1");
-            }
         }
 
         //FLAG:
@@ -354,11 +344,14 @@ int main(int argc,char **argv)
 void R(char * Rfile)
 {
     
-    struct ifm * Rlist = (struct ifm *)malloc(sizeof(struct ifm) * 9000000);
+    struct ifm * Rlist = (struct ifm *)malloc(sizeof(struct ifm) * 20000000);
 
     DIR * rdir = opendir(Rfile);
-    if(rdir == NULL)exit(-1);
-
+    if(rdir == NULL)
+    {
+        fprintf(stderr,"\033[0m""ls: 无法打开目录 '%s': 权限不够\n",Rfile);
+        return;
+    }   
     int count4q = 0;
     struct dirent * trdir;
     for(int i = 0;(trdir = readdir(rdir))!=NULL;i++,count4q++)
@@ -374,15 +367,15 @@ void R(char * Rfile)
     {
         if(S_ISDIR(Rlist[i].buf__stat.st_mode))
         {
-            printf("\033[1;5;34m""%s\n""\033[0m",Rlist[i].rdirent.d_name);
+            printf("\033[1;5;34m""%s\n\033[0m",Rlist[i].rdirent.d_name);
         }
         else if(Rlist[i].buf__stat.st_mode&S_IXUSR)
         {
-            printf("\033[1;5;32m""%s\n""\033[0m",Rlist[i].rdirent.d_name);
+            printf("\033[1;5;32m""%s\n\033[0m",Rlist[i].rdirent.d_name);
         }
         else if(strstr(Rlist[i].rdirent.d_name,".png")!=NULL)
         {
-            printf("\033[1;5;35m""%s\n""\033[0m",Rlist[i].rdirent.d_name);
+            printf("\033[1;5;35m""%s\n\033[0m",Rlist[i].rdirent.d_name);
         }
         else 
         {
@@ -398,7 +391,12 @@ void R(char * Rfile)
             char go[1000];
             sprintf(go,"%s/%s",Rfile,Rlist[i].rdirent.d_name);
             struct stat ng;
+            
             lstat(go,&ng);
+            
+            if(ng.st_mode==-1)
+                exit(1);
+
             if(S_ISLNK(ng.st_mode))
             {
                 continue;
@@ -407,6 +405,5 @@ void R(char * Rfile)
             R(go);
         }
     }
-
-
+    free(Rlist);
 }

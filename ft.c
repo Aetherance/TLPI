@@ -17,7 +17,7 @@
 
 #define MAX_PATH 1024
 #define MAX_FILE 512
-#define MAX_RFILE 60000
+#define MAX_RFILE 600000
 
 enum order {
     a, s, t, r, I, l, R
