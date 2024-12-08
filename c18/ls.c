@@ -12,6 +12,7 @@
 #include<pwd.h>
 #include<grp.h>
 #include<time.h>
+#include<locale.h>
 
 #define LIST_SIZE 20970
 #define PATH_SIZE 4048
@@ -47,7 +48,6 @@ int FileNameRead = 0;
 int order = 1;
 
 void R();
-
 
 int sort_init(const void * ptr1, const void * ptr2);
 int sort_by_change_time(const void * ptr1, const void * ptr2);
@@ -92,6 +92,7 @@ int main(int argc,char **argv)
     }
 
     order = optTable[OPT__R] ? -1 : 1 ;
+    
     // RRRRRRRRRRRRRRRRRRRRRRRR
     if(optTable[OPT_RR])
     {
@@ -354,23 +355,8 @@ void R(char * Rfile)
 int sort_init(const void * ptr1, const void * ptr2)
 {
     struct ifm * pos  = (struct ifm*)ptr1, * aftpos = (struct ifm*)ptr2;
-    
-    if(*(pos->rdirent.d_name)=='.'||(*(aftpos->rdirent.d_name)=='.'&&*(pos->rdirent.d_name+1)!='\0'))
-    {
-        if(strstr(pos->rdirent.d_name+1,aftpos->rdirent.d_name+1)!=NULL)
-            return 1 * order;
-        if(strstr(aftpos->rdirent.d_name+1,pos->rdirent.d_name+1)!=NULL)
-            return -1 * order;
-        
-        return strcmp(pos->rdirent.d_name+1,aftpos->rdirent.d_name+1) * order; 
-    }
-    // 如果前面的部分一样，把长的排在后面
-    if(strstr(pos->rdirent.d_name,aftpos->rdirent.d_name)!=NULL)
-        return 1 * order;
-    if(strstr(aftpos->rdirent.d_name,pos->rdirent.d_name)!=NULL)
-        return -1 * order;
-
-    return strcmp(pos->rdirent.d_name,aftpos->rdirent.d_name) * order;
+    setlocale(LC_COLLATE,"");
+    return strcoll(pos->rdirent.d_name,aftpos->rdirent.d_name) * order;
 }
 
 int sort_by_change_time(const void * ptr1, const void * ptr2)
