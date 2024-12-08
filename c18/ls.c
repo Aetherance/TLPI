@@ -1,5 +1,3 @@
-// 几乎 sort
-
 #include<stdio.h>
 #include<sys/stat.h>
 #include<string.h>
@@ -92,8 +90,7 @@ int main(int argc,char **argv)
     }
 
     order = optTable[OPT__R] ? -1 : 1 ;
-    
-    // RRRRRRRRRRRRRRRRRRRRRRRR
+
     if(optTable[OPT_RR])
     {
         for(int i = 0;i<FileNameCount;i++)
@@ -175,7 +172,6 @@ int main(int argc,char **argv)
         closedir(dir);
 
         // get_sort_mode
-
         FP sort_mode = sort_init;
         if(optTable[OPT__T])sort_mode = sort_by_change_time;
         qsort(ifmlist,all_name_count,sizeof(struct ifm),sort_mode);
@@ -222,13 +218,14 @@ int main(int argc,char **argv)
             {
                 PrintWithL(readifm);
                 PrintList(readifm);
-
                 printf("\n");
             }
+
             else if(!optTable[OPT_RR]&&total_name_len<=win.ws_col)
             {
                 PrintList(readifm);
             }
+
             else
             {
                 temp_line_len += strlen(readifm->rdirent.d_name)+2;
