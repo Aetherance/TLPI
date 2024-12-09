@@ -1,0 +1,34 @@
+if(optTable[OPT__l_])
+        {
+        // 第一列
+            if(S_ISDIR(Rlist[i].buf__stat.st_mode))printf("d");
+            else if(S_ISLNK(Rlist[i].buf__stat.st_mode))printf("l");
+            else if(S_ISBLK(Rlist[i].buf__stat.st_mode))printf("d");
+            else if(S_ISCHR(Rlist[i].buf__stat.st_mode))printf("c");
+            else if(S_ISCHR(Rlist[i].buf__stat.st_mode))printf("c");
+            else printf("-");
+
+            // 所有者权限
+            printf(Rlist[i].buf__stat.st_mode & S_IRUSR?"r":"-");
+            printf(Rlist[i].buf__stat.st_mode & S_IWUSR?"w":"-");
+            printf(Rlist[i].buf__stat.st_mode & S_IXUSR?"x":"-");
+            //所属组权限
+            printf(Rlist[i].buf__stat.st_mode & S_IRGRP?"r":"-");
+            printf(Rlist[i].buf__stat.st_mode & S_IWGRP?"w":"-");
+            printf(Rlist[i].buf__stat.st_mode & S_IXGRP?"x":"-");
+
+            //其他用户权限
+            printf(Rlist[i].buf__stat.st_mode & S_IROTH?"r":"-");
+            printf(Rlist[i].buf__stat.st_mode & S_IWOTH?"w":"-");
+            printf(Rlist[i].buf__stat.st_mode & S_IXOTH?"x":"-");
+
+            printf(" %lu",Rlist[i].buf__stat.st_nlink);
+            printf(" %s",getpwuid(Rlist[i].buf__stat.st_uid)->pw_name);
+            printf(" %s",getgrgid(Rlist[i].buf__stat.st_gid)->gr_name);
+            printf("%lu ",Rlist[i].buf__stat.st_size);
+            
+            struct tm * time = localtime(&Rlist[i].buf__stat.st_mtime);
+            char time_buf[64];
+            strftime(time_buf, 64, "%m月 %d %H:%M",time);
+            printf("%s ",time_buf);
+        }
