@@ -16,7 +16,11 @@ vector<string> split(string s)
             n++;
         }
         result.push_back(s.substr(pos,n));
-        pos += n + 1;
+        pos += n;
+        while (s[pos] ==' '&&pos<s.size())
+        {
+            pos++;
+        }
     }
     
     return result;
